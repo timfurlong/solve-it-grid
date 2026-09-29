@@ -1,0 +1,77 @@
+# Solve It Grid configuration. `sig setup` copies this file to
+# ~/Library/Application Support/solve-it-grid/config.toml and fills in the blanks.
+
+# Monday of the first tracked week (YYYY-MM-DD). Set by `sig setup`; earlier weeks are ignored.
+start_week = ""
+
+[paths]
+# Absolute path to this repo's rubric.md. Set by `sig setup`.
+rubric = ""
+# Absolute path to the Claude Code CLI. Set by `sig setup`.
+claude = ""
+
+[tags]
+# Things tag names for each grid color. `sig setup` creates any that are missing.
+red = "🔴 Red"
+yellow = "🟡 Yellow"
+green = "🟢 Green"
+blue = "🔵 Blue"
+unscored = "⚪ Unscored"
+
+[areas]
+# Title of the Things area used for work to-dos (include any emoji exactly as in Things).
+work = "Work"
+# Title of the Things area used for home to-dos.
+home = "Home"
+
+[[goals]]
+# Unique goal id; also the unit id when target is 1.
+id = "yellow-work"
+# Label shown in status output.
+label = "Work yellow"
+# Grid color this goal counts.
+color = "yellow"
+# Area key from [areas], or "any".
+area = "work"
+# Completions needed per week; each one is a unit that earns a chip.
+target = 1
+
+[[goals]]
+# Unique goal id.
+id = "yellow-home"
+# Label shown in status output.
+label = "Home yellow"
+# Grid color this goal counts.
+color = "yellow"
+# Area key from [areas], or "any".
+area = "home"
+# Completions needed per week.
+target = 1
+
+[[goals]]
+# Unique goal id; units are green-1 and green-2.
+id = "green"
+# Label shown in status output.
+label = "Green"
+# Grid color this goal counts.
+color = "green"
+# Area key from [areas], or "any".
+area = "any"
+# Completions needed per week.
+target = 2
+
+[checkin]
+# Local time the daily check-in becomes due on workdays (HH:MM).
+time = "09:00"
+# Country code for the public holidays that are not workdays.
+holidays = "US"
+
+[categorizer]
+# Claude model used to classify to-dos. An alias like "sonnet" follows the latest version.
+model = "sonnet"
+# Maximum to-dos per Claude call.
+batch_size = 25
+# Seconds before a Claude call is abandoned.
+timeout_seconds = 60
+# Consecutive failed runs before the error state.
+failure_threshold = 3

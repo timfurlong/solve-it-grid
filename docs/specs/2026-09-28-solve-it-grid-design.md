@@ -22,10 +22,10 @@ The Solve It Grid places activities on two axes, fun and stimulating:
 |---|---|---|---|---|
 | Red | no | yes | deadlines, incidents, someone waiting on you | no |
 | Yellow | no | no | chores, admin, errands, appointments to book | yes |
-| Green | yes | yes | exercise, music practice, building something new, meetups | yes |
+| Green | yes | yes | exercise, socializing, creative hobbies, music, playing with kids | yes |
 | Blue | yes | no | passive downtime (TV, scrolling) | no |
 
-Red is never scored. It gets done on its own because it is urgent, and rewarding it would reward crisis mode. Blue rarely appears on a to-do list and is never scored.
+Red is never scored. It gets done on its own because it is urgent, and rewarding it would reward crisis mode. Blue rarely appears on a to-do list: the tag exists for manual use, but it is never scored and the categorizer never proposes it.
 
 A fifth marker, **unscored**, covers to-dos that are not standalone tasks: packing-list entries, shopping-list entries, and sub-steps listed under a project heading. Without it, one packing list would satisfy a week of yellow.
 
@@ -39,7 +39,7 @@ Everything runs on the MacBook Pro, where Things, the menu bar and the user are.
             └──────▲───────────────┬───────┘
      URL scheme    │               │ things.py (read-only)
      (writes)      │               ▼
-            ┌──────┴──────────────────────────┐      claude -p (Haiku 4.5)
+            ┌──────┴──────────────────────────┐      claude -p (Sonnet)     
  launchd ──►│ engine: `sig` CLI (Python)      │─────► JSON classifier, no tools
   10 min    │  categorize · status · chips    │
             └──────▲───────────────┬──────────┘
@@ -95,7 +95,7 @@ Goals live in `config.toml`:
 | `yellow-home` | yellow | Home | 1 |
 | `green` | green | any | 2 |
 
-Each point of a target is a **unit**, so the week has four units: work yellow, home yellow, green 1, green 2. Splitting yellow by area enforces a little work/life balance. Green is not split because green work exists but is rare.
+Each point of a target is a **unit**, so the week has four units: work yellow, home yellow, green 1, green 2. Splitting yellow by area enforces a little work/life balance. Green is not split because green means active fun, which almost always lands at home.
 
 - **Counting:** a to-do counts toward a goal when it is completed (not canceled) during the week, has exactly one color tag matching the goal, and resolves to the goal's area. The list it was in (Inbox, Anytime, Someday, a project) does not matter.
 - **Week:** Monday 00:00 to Sunday 23:59:59 local time, by completion timestamp.
@@ -114,7 +114,7 @@ Each point of a target is a **unit**, so the week has four units: work yellow, h
 
 ### Week freezing
 
-A past week's result (units filled, hit, chips) is written to the state database and never recomputed once the week **freezes**. A week freezes when it has ended and every to-do completed in it has a color, or 48 hours after it ended, whichever comes first. Freezing keeps history stable when goals, tags or colors are edited later.
+A past week's result (units filled, hit, chips) is written to the state database and never recomputed once the week **freezes**. A week freezes 48 hours after it ends, which leaves time for completions made on the phone to sync once the Mac wakes and for the categorizer to color them. A week never freezes while `sig status` reports a setup problem (a missing tag or area), because those under-count. Freezing keeps history stable when goals, tags or colors are edited later. Until a week freezes, history shows its live score.
 
 ### Storage
 
@@ -125,7 +125,7 @@ All user data lives in `~/Library/Application Support/solve-it-grid/`, never in 
 | `config.toml` | start week, goals, tag names, area titles, check-in time, categorizer settings, `claude` path |
 | `state.db` | SQLite: `chips`, `weeks` (frozen results), `checkins`, `runs` (categorizer run outcomes), `meta` |
 | `rubric.local.md` | optional personal examples appended to the classification prompt |
-| `review.tsv` | the latest dry-run proposals, editable before `--apply-review` |
+| `review.tsv`, `review.items.jsonl` | the latest dry-run proposals (editable before `--apply-review`) and the item details behind them |
 | `golden.jsonl` | user-confirmed colors used by `sig eval` |
 | `categorize.log.jsonl` | every assignment: time, uuid, title, color, area, reason, model |
 
@@ -135,7 +135,7 @@ The repo ships `config.example.toml`, and `sig setup` copies it into place. The 
 
 ### Schedule
 
-A launchd user agent runs `sig categorize` every 10 minutes. It can also be run by hand. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude.
+A launchd user agent runs `sig categorize` every 10 minutes. It can also be run by hand. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude. A run also stops, and counts as failed, while `sig status` reports a setup problem, so a renamed tag doesn't send the whole list back to Claude. When the model can't place an item's area, that item is left for the check-in and not asked about again for 24 hours.
 
 ### Scope
 
@@ -150,18 +150,17 @@ Inbox to-dos get a color but are never filed into an area: the Inbox is the chec
 
 ### Classification
 
-- One `claude -p` call per batch of up to 25 items, using Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) through the locally logged-in Claude Code CLI (subscription auth, no API key).
+- One `claude -p` call per batch of up to 25 items, using the `sonnet` model alias through the locally logged-in Claude Code CLI (subscription auth, no API key). The alias follows the latest Sonnet release, so no code change is needed when a new one ships. Extended thinking is turned off: it made a 10-item batch take about 55 seconds instead of 10.
 - The call runs with no tools, no MCP servers, no settings, hooks or plugins, and no user or project `CLAUDE.md`, and requests structured JSON output. The exact CLI flags are pinned in the implementation plan. (`--bare` is not usable because it disables subscription login.)
-- Input per item: uuid, title, notes (first 300 characters), project, heading, area, deadline, start list, status.
-- Output per item: `{uuid, color, area, reason}`, where `color` is one of `red | yellow | green | blue | unscored`, and `area` is `work | home | null`. `null` means no area is needed or the model is unsure.
+- Input per item: uuid, title, notes (first 300 characters), project, heading, area, list (Inbox, Today, Anytime, Upcoming or Someday; Things stores Upcoming as Someday plus a start date, so the list is derived), scheduled date, deadline, status.
+- Output per item: `{uuid, color, area, reason}`, where `color` is one of `red | yellow | green | unscored` (never blue), and `area` is `work | home | null`. `null` means no area is needed or the model is unsure.
 - The prompt is built from `rubric.md` (in the repo: grid definitions and classification rules) plus `rubric.local.md` (personal examples, never committed).
 
 Classification rules in `rubric.md`:
 
-- **Red** means urgency or outside pressure at classification time: a deadline within about three days, someone actively waiting, or an incident.
-- **Yellow** is a should-do without urgency.
-- **Green** is fun and energizing, in any area. Work greens include prototyping, spikes on interesting technology, pairing, writing, and meetups.
-- **Blue** is passive downtime.
+- **Red** means urgency or outside pressure at classification time: a deadline within about three days, an Upcoming to-do scheduled within about three days that carries outside consequences, someone actively waiting, or an incident.
+- **Yellow** is a should-do without urgency. Interesting or intellectually engaging work (design, research, spikes, writing for work) is still yellow.
+- **Green** is active fun: it takes energy to start but gives energy back, like exercise, socializing, creative hobbies, music, and playing with kids. When in doubt between green and yellow, yellow.
 - **Unscored** covers list entries and sub-steps that are not standalone tasks.
 
 ### Writing back
@@ -170,8 +169,8 @@ Classification rules in `rubric.md`:
 - Writes use the Things URL scheme through `open -g`, so Things never takes focus:
   - to-do: `things:///update?id=<uuid>&auth-token=<token>&add-tags=<tag>[&list-id=<area-id>]`
   - project: `things:///update-project?id=<uuid>&auth-token=<token>&area-id=<area-id>`
-- After writing, the categorizer re-reads the database and logs any write that did not land as a failure.
-- The first implementation task confirms that `update` works on completed to-dos. If it does not, completed to-dos are written through AppleScript (`set tag names`) instead.
+- Things applies URL-scheme writes asynchronously, so after writing, the categorizer re-reads the database after 2, 4 and 8 seconds until every write shows up. Any write still missing is reported as unverified and retried on the next run.
+- `update` works on completed to-dos too (verified during rollout), so completed and open to-dos use the same write path.
 
 ### Validation and failures
 
@@ -188,7 +187,7 @@ Items are skipped (and retried on the next run) when the response has an unknown
 
 A workday is Monday to Friday, excluding US federal holidays (computed with the `holidays` Python package). On workdays the check-in is **due** from 9:00 local time until marked done.
 
-The check-in is guided: the popover lists steps, each step checks itself against live Things data, and each open step links into Things to do the work there.
+The check-in is guided: the popover lists steps and each open step links into Things to do the work there. Most steps check themselves against live Things data. Three are affirmations you tick by hand, because only you can judge them.
 
 | Step | Done when | Link |
 |---|---|---|
@@ -198,7 +197,9 @@ The check-in is guided: the popover lists steps, each step checks itself against
 | A green is in Today | a green to-do is in Today | the green tag's list (`things:///show?query=<tag>`) |
 | Give N items an area | no to-do outside the Inbox lacks a resolvable area (shown only when N > 0) | each item by id |
 | Fix N items | no empty titles or multi-color items (shown only when N > 0) | each item by id |
-| Review Someday (Mondays) | ticked by hand | `things:///show?id=someday` |
+| Today's list is reviewed | ticked by hand (`today-reviewed`) | `things:///show?id=today` |
+| Colors look right | ticked by hand (`colors-reviewed`) | `things:///show?id=today` |
+| Review Someday (Mondays) | ticked by hand (`someday-review`) | `things:///show?id=someday` |
 
 "Done for today" (`sig checkin done`) is always available, whether or not every step is ticked. The check-in guides rather than polices. On Mondays the check-in header also shows last week's result and the streak.
 
@@ -227,11 +228,13 @@ The center shows the single most important signal, in this priority order:
  [ I moved the yellow chip                     ]
  • 3 reds finished, not scored
 
- Today's check-in                         2 left
+ Today's check-in                         4 left
   ✓ Inbox is empty
   ✓ A red is in Today
   ✓ A yellow is in Today
-  ○ Pick a green for today           Show greens
+  ○ A green is in Today                     Show
+  ☐ Today's list is reviewed                Show
+  ☐ Colors look right                       Show
   ○ Give 1 item an area                  Show it
  [ Snooze 1 hour ]          [ Done for today ]
  ─────────────────────────────────────────────
@@ -240,6 +243,8 @@ The center shows the single most important signal, in this priority order:
 
 - The four poker chips are drawn like the physical ones. An earned chip is solid ("In the jar"). A pending chip is solid, lifted and gently animated ("Move it now"). An open unit is a dashed outline ("Not yet"). Animation respects Reduce Motion.
 - The acknowledge button appears only while chips are pending and names them ("I moved the yellow chip", "I moved 2 chips"). It acknowledges every pending chip shown.
+- Steps with `"manual": true` render as a checkbox the user clicks, which runs `sig checkin tick <id>`. Every other step ticks itself.
+- A pending chip belongs to the unit with the same `unit` id only when its `week_start` is the current week. A chip left over from last week shows as its own "Move it now" row.
 - **History** opens a small window with the last 12 weeks (units filled, hit or miss, chips) plus the current and best streak.
 
 ### Notifications
@@ -254,7 +259,7 @@ Check-in notifications use the time-sensitive interruption level if the app can 
 
 ### Error state
 
-The error state is meant to be hard to ignore. It triggers when `sig status` fails or times out, when the categorizer has failed three runs in a row, or when setup is incomplete (missing auth token, missing tags). In the error state:
+The error state is meant to be hard to ignore. It triggers when `sig status` fails or times out, when the categorizer has failed three runs in a row, or when `sig status` reports a setup problem (missing color tags, an area title not found in Things, Things URLs turned off, or the first review not applied yet). In the error state:
 
 - The ring is replaced by a filled red warning triangle.
 - The popover opens with an error banner at the top: what failed, since when, and the likely fix (for example "Claude Code is not logged in: run `claude` in a terminal").
@@ -270,7 +275,7 @@ The error state is meant to be hard to ignore. It triggers when `sig status` fai
 | `sig status [--json]` | current week, chips, check-in, hygiene, health, history. Human-readable by default |
 | `sig chip ack <id\|all>` | confirm pending chips were moved |
 | `sig checkin done` | mark today's check-in done |
-| `sig checkin tick <step>` | tick a manual step (`someday-review`) |
+| `sig checkin tick <step>` | tick a manual step (`today-reviewed`, `colors-reviewed`, `someday-review`) |
 | `sig eval` | score the classifier against `golden.jsonl` |
 
 `sig status --json` is the contract with the menu bar app:
@@ -287,13 +292,15 @@ The error state is meant to be hard to ignore. It triggers when `sig status` fai
   ],
   "red_done": 3,
   "chips": {
-    "pending": [{"id": 57, "unit": "yellow-home", "color": "yellow", "awarded_at": "2026-10-01T10:12:31-06:00"}],
+    "pending": [{"id": 57, "week_start": "2026-09-28", "unit": "yellow-home", "color": "yellow",
+                 "awarded_at": "2026-10-01T10:12:31-06:00"}],
     "total_earned": 14
   },
   "streak": {"current": 3, "best": 5},
   "checkin": {
     "workday": true, "due": true, "done": false,
-    "steps": [{"id": "inbox", "label": "Inbox is empty", "done": true, "links": [{"label": "Show", "url": "things:///show?id=inbox"}]}]
+    "steps": [{"id": "inbox", "label": "Inbox is empty", "done": true, "manual": false,
+               "links": [{"label": "Show", "url": "things:///show?id=inbox"}]}]
   },
   "last_week": {"start": "2026-09-21", "hit": true},
   "history": [{"start": "2026-09-21", "units_done": 4, "hit": true, "chips": 4}],

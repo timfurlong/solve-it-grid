@@ -19,7 +19,7 @@
 - Units: `yellow-work`, `yellow-home`, `green-1`, `green-2`. A goal with target 1 has a unit id equal to the goal id. Otherwise the ids are `{goal_id}-{i}` for i = 1..target.
 - Week: Monday 00:00 to Sunday 23:59:59 local time. A completion belongs to the week containing its local `stop_date`.
 - A past week freezes when it has ended and every to-do completed in it has a color, or 48 hours after it ended.
-- Model: `claude-haiku-4-5-20251001`, batch size 25, timeout 60 s, 3 consecutive failed runs trigger the error state.
+- Model: the `sonnet` alias (follows the latest Sonnet; changed from Haiku after the first review), batch size 25, timeout 60 s, extended thinking off (`MAX_THINKING_TOKENS=0` in the subprocess env), 3 consecutive failed runs trigger the error state.
 - Pinned headless argv (verified 2026-09-28 against Claude Code 2.1.284 with subscription login). **Do not use `--bare`: it disables OAuth.**
 
   ```
@@ -66,7 +66,7 @@
   - `config.load_config(path: Path) -> Config`
   - `config.config_path() -> Path` (`app_dir() / "config.toml"`)
 
-- [ ] **Step 1: Write `pyproject.toml`**
+- [x] **Step 1: Write `pyproject.toml`**
 
   - `name = "solve-it-grid"` (the uv tool dir in Task 12 depends on it).
   - hatchling build and a `src/` layout.
@@ -76,7 +76,7 @@
 
   `conftest.py` has an autouse fixture that sets `SIG_HOME` to `tmp_path`.
 
-- [ ] **Step 2: Write `config.example.toml` at the repo root**
+- [x] **Step 2: Write `config.example.toml` at the repo root**
 
   Keys:
   - `start_week = ""`
@@ -89,7 +89,7 @@
 
   Each key gets a one-line comment.
 
-- [ ] **Step 3: Write failing tests**
+- [x] **Step 3: Write failing tests**
 
   ```python
   def test_loads_example_config():
@@ -105,10 +105,10 @@
   def test_rejects_unknown_goal_color(tmp_path): ...  # color = "purple" -> ValueError naming the goal id
   ```
 
-- [ ] **Step 4:** Run `uv run pytest tests/test_config.py -q`. Expected: FAIL (module missing).
-- [ ] **Step 5: Implement `paths.py` and `config.py`** with `tomllib`. Empty strings map to `None`.
-- [ ] **Step 6:** Run the tests. Expected: PASS. Also run `uv run ruff check`, which should be clean.
-- [ ] **Step 7: Commit**: `git commit -m "Add sig package scaffold and config loading"`
+- [x] **Step 4:** Run `uv run pytest tests/test_config.py -q`. Expected: FAIL (module missing).
+- [x] **Step 5: Implement `paths.py` and `config.py`** with `tomllib`. Empty strings map to `None`.
+- [x] **Step 6:** Run the tests. Expected: PASS. Also run `uv run ruff check`, which should be clean.
+- [x] **Step 7: Commit**: `git commit -m "Add sig package scaffold and config loading"`
 
 ### Task 2: Domain model and Things reader
 
@@ -144,7 +144,7 @@
   - `factories.todo(**overrides) -> Todo`, with defaults `uuid="t1"`, `title="Task"`, `status="incomplete"`, `start="Anytime"`, everything else empty or `None`
   - `factories.snapshot(todos=(), projects=(), **overrides) -> Snapshot`, with default `area_ids={"Work": "A-W", "Home": "A-H"}`, all five default tags present, `token_present=True`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   ```python
   def test_area_resolves_through_heading_project():
@@ -170,8 +170,8 @@
       assert s.token_present and s.area_ids
   ```
 
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement `model.py` and `things_read.py`**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement `model.py` and `things_read.py`**
 
   `read_snapshot` uses:
   - `things.tasks(type="to-do", status="incomplete")`
@@ -181,8 +181,8 @@
   - `things.areas()`, `things.tags()`, `things.today()`, `things.inbox()`, `things.token()`
 
   `Snapshot.projects` keeps only projects with status `incomplete`. `sqlite3.Error` and `PermissionError` are wrapped in `ThingsUnavailable`, and the message names the macOS setting: "grant Full Disk Access to the Python that runs sig".
-- [ ] **Step 4:** Run the tests. Expected: PASS. Run once with `-m live`, which should also pass.
-- [ ] **Step 5: Commit**: `git commit -m "Add domain model and Things reader"`
+- [x] **Step 4:** Run the tests. Expected: PASS. Run once with `-m live`, which should also pass.
+- [x] **Step 5: Commit**: `git commit -m "Add domain model and Things reader"`
 
 ### Task 3: Weeks and scoring
 
@@ -201,7 +201,7 @@
   - `scoring.unit_ids(goals: tuple[Goal, ...]) -> list[str]`
   - `scoring.score_week(todos: Iterable[Todo], cfg: Config, area_ids: dict[str, str], week: Week) -> WeekScore`
 
-- [ ] **Step 1: Write failing tests** (use `factories.todo` with `status="completed"` and `stop=`):
+- [x] **Step 1: Write failing tests** (use `factories.todo` with `status="completed"` and `stop=`):
 
   ```python
   def test_unit_ids(cfg): assert unit_ids(cfg.goals) == ["yellow-work", "yellow-home", "green-1", "green-2"]
@@ -222,12 +222,12 @@
   ```
 
   `cfg` is a fixture: `load_config(repo_root() / "config.example.toml")`.
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.**
   - A goal's area key maps to `area_ids[cfg.areas[key]]`. `"any"` matches any area, including none.
   - A to-do counts only when `colors_of` returns exactly one color.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Add week math and goal scoring"`
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Add week math and goal scoring"`
 
 ### Task 4: State store
 
@@ -247,7 +247,7 @@
   | runs | `record_run(kind: str, ok: bool, error: str \| None, now)`, `failure_streak(kind) -> tuple[int, datetime \| None, str \| None]` (count since the last ok run, first failure time, last error) |
   | meta | `get_meta(key) -> str \| None`, `set_meta(key, value)` |
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - `test_award_is_idempotent`
   - `test_ack_all_and_some`
   - `test_total_earned_counts_acked_only`
@@ -255,10 +255,10 @@
   - `test_checkin_done_and_ticks_are_per_day`
   - `test_failure_streak_resets_on_success` (fail, fail, ok, fail gives count 1, whose first-failure time is the last failure's time)
   - `test_meta_roundtrip`
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement** with stdlib `sqlite3`. Datetimes are stored as ISO strings.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Add SQLite state store"`
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement** with stdlib `sqlite3`. Datetimes are stored as ISO strings.
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Add SQLite state store"`
 
 ### Task 5: Progress: chips, freezing, streaks
 
@@ -273,7 +273,7 @@
   - `progress.scoring_cutoff(state, cfg, today: date) -> date`: the start of the earliest unfrozen week at or after `cfg.start_week`, never later than the current week's start. It's used as `read_snapshot(completed_since=...)`.
   - `progress.refresh(snapshot, state, cfg, now: datetime) -> Progress`
 
-- [ ] **Step 1: Write failing tests** (`cfg.start_week = date(2026, 9, 21)` via `dataclasses.replace`)
+- [x] **Step 1: Write failing tests** (`cfg.start_week = date(2026, 9, 21)` via `dataclasses.replace`)
 
   ```python
   def test_chip_awarded_once_when_unit_fills(): ...        # refresh twice -> 1 chip, new_chips empty the 2nd time
@@ -290,13 +290,13 @@
   def test_history_is_last_12_frozen_weeks(): ...
   ```
 
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement `refresh`**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement `refresh`**
   - Score every unfrozen week from `scoring_cutoff` to the current week, and award chips for its done units.
   - Freeze each past week that meets the freeze rule. `FrozenWeek.chips` counts the chips awarded for that week.
   - Build the streak from the frozen hits, plus unfrozen past weeks at their live score, plus the current week only if it's hit.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Award chips, freeze weeks, compute streaks"`
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Award chips, freeze weeks, compute streaks"`
 
 ### Task 6: Daily check-in
 
@@ -323,7 +323,7 @@
   | `fix` | Fix N items | only present when there are empty titles or multi-color items |
   | `someday-review` | Review Someday | Mondays only, done when `"someday-review" in ticks` |
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   ```python
   def test_workdays():
@@ -341,10 +341,10 @@
       assert show_url(query="🟢 Green") == "things:///show?query=%F0%9F%9F%A2%20Green"
   ```
 
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.** Use `holidays.country_holidays(country)`. A to-do "needs an area" when it's open, not in the Inbox, and has `area_id is None` and `project_id is None`. Projects with no area count too.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Add daily check-in evaluation"`
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.** Use `holidays.country_holidays(country)`. A to-do "needs an area" when it's open, not in the Inbox, and has `area_id is None` and `project_id is None`. Projects with no area count too.
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Add daily check-in evaluation"`
 
 ### Task 7: Status, health and the status CLI
 
@@ -369,7 +369,7 @@
   | `categorizer` | meta `review_applied_at` unset | `First review pending. Run sig categorize --dry-run, then sig categorize --apply-review.` |
   | `categorizer` | failure streak ≥ `failure_threshold` | the last error, with `since` set to the first failure |
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   ```python
   def test_status_shape(): ...          # keys: generated_at, week{start,end,hit}, units[4], red_done, chips{pending,total_earned},
@@ -387,13 +387,13 @@
   def test_cli_checkin_done_and_tick(): ...
   ```
 
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.**
   - `sig status` loads config from `config_path()`. If the file is missing, it prints `Run sig setup first.` and exits 2.
   - It opens `StateStore(app_dir() / "state.db")`, calls `read_snapshot(scoring_cutoff(...))`, then `build_status`.
   - The text rendering is plain, one line per unit, the pending chips, the check-in steps, and any health errors.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Add sig status, chip ack and check-in commands"`
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Add sig status, chip ack and check-in commands"`
 
 ### Task 8: Things writer and `sig setup`
 
@@ -417,7 +417,7 @@
   - stdout and stderr go to `__LOGDIR__/categorize.out.log` and `categorize.err.log`
   - `EnvironmentVariables.PATH`: `/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:__HOME__/.local/bin`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - `test_add_tag_opens_update_url_in_background`: the fake `url` returns `"things:///update?id=T1&add-tags=X&auth-token=SECRET"`. Assert the argv equals `["/usr/bin/open", "-g", that_url]`.
   - `test_project_area_uses_update_project`
   - `test_writer_errors_never_include_token`: `run` raises `CalledProcessError` whose `cmd` contains the URL. The re-raised `ThingsWriteError` message excludes `SECRET`.
@@ -425,20 +425,22 @@
   - `test_setup_writes_config_once`: sets `start_week` to the Monday of `now`, `paths.rubric` to `repo/rubric.md`, and `paths.claude` via `shutil.which("claude")`, falling back to `~/.local/bin/claude`. A second run leaves an edited config untouched.
   - `test_setup_renders_plist_and_bootstraps`: the argv includes `launchctl bootstrap gui/<uid> <plist>`, preceded by a `bootout` whose failure is ignored.
   - `test_setup_no_agent_skips_launchctl`
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.** `ThingsWriteError` wraps process errors with a token-free message. `sig setup` prints each message and ends by reporting the area check (configured titles vs. Things) and the token check.
-- [ ] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add Things writer and sig setup"`
-- [ ] **Step 5: GATE. Live setup.**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.** `ThingsWriteError` wraps process errors with a token-free message. `sig setup` prints each message and ends by reporting the area check (configured titles vs. Things) and the token check.
+- [x] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add Things writer and sig setup"`
+- [x] **Step 5: GATE. Live setup.**
   1. Ask the user: "OK to run `sig setup --no-agent`? It creates the five color tags in Things and writes config.toml to Application Support."
   2. On yes, run `uv tool install --editable ./engine`, then `sig setup --no-agent`.
   3. Edit `[areas]` in the real config to the user's actual area titles.
   4. Confirm `sig status` reports no `setup` errors. Only the "First review pending" error should remain.
-- [ ] **Step 6: GATE. Verify URL-scheme writes on a completed to-do.** This settles the spec's open risk.
+- [x] **Step 6: GATE. Verify URL-scheme writes on a completed to-do.** This settles the spec's open risk.
   1. Ask the user to name one to-do completed this week that may receive a color tag.
   2. Call `UrlSchemeWriter().add_tag(uuid, "🟡 Yellow")` (or the color the user picks).
   3. Wait 2 s, then re-read the item with `things.get(uuid)` and check the tag landed.
   4. **If it did not land:** add `AppleScriptWriter.add_tag`, which uses `tell application "Things3"` to append to `tag names` of `to do id`, and select it for completed to-dos in `UrlSchemeWriter.add_tag` via a `completed: bool` parameter. Add a unit test for the selection, re-verify live, and commit.
   5. Record the outcome in this plan under the step.
+
+  **Outcome (2026-09-29):** `update` with `add-tags` works on completed to-dos. The tag landed on a to-do completed the week before, and its status stayed completed. No AppleScript fallback needed.
 
 ### Task 9: Rubric, prompt and classifier
 
@@ -461,7 +463,7 @@
   - `classifier.ClaudeClassifier(claude_path: Path, model: str, system_prompt: str, timeout: int, cwd: Path, run=subprocess.run)`, with `.classify(items: list[WorkItem]) -> list[dict]` (raw `items` from `structured_output`)
   - `classifier.validate(items: list[WorkItem], raw: list[dict]) -> tuple[list[Assignment], list[tuple[str, str]]]`: returns (valid, skipped as (uuid, reason))
 
-- [ ] **Step 1: Write `rubric.md`.** It contains:
+- [x] **Step 1: Write `rubric.md`.** It contains:
   - the grid table from the spec
   - the five markers with the spec's classification rules, word for word
   - the rule that `area` is `work` or `home` only when asked (`needs` contains `area`), and `null` when unsure
@@ -469,7 +471,7 @@
   - one generic example per marker, plus one work green
 
   No personal to-dos.
-- [ ] **Step 2: Write failing tests**
+- [x] **Step 2: Write failing tests**
 
   ```python
   def test_argv_is_pinned(tmp_path):
@@ -495,11 +497,11 @@
   def test_system_prompt_appends_local_examples(): ...
   ```
 
-- [ ] **Step 3:** Run the tests. Expected: FAIL.
-- [ ] **Step 4: Implement.** `classify` passes `input=build_user_message(items)`, `capture_output=True`, `text=True`, `timeout=timeout` and `cwd=cwd`.
-- [ ] **Step 5:** Run the tests. Expected: PASS.
-- [ ] **Step 6: Live check (reads Things, calls Haiku, no writes).** Build `WorkItem`s for 5 real open to-dos, call `classify`, and confirm that `validate` accepts every answer. No GATE is needed because nothing is written.
-- [ ] **Step 7: Commit**: `git commit -m "Add rubric, prompt building and Claude classifier"`
+- [x] **Step 3:** Run the tests. Expected: FAIL.
+- [x] **Step 4: Implement.** `classify` passes `input=build_user_message(items)`, `capture_output=True`, `text=True`, `timeout=timeout` and `cwd=cwd`.
+- [x] **Step 5:** Run the tests. Expected: PASS.
+- [x] **Step 6: Live check (reads Things, calls Haiku, no writes).** Build `WorkItem`s for 5 real open to-dos, call `classify`, and confirm that `validate` accepts every answer. No GATE is needed because nothing is written.
+- [x] **Step 7: Commit**: `git commit -m "Add rubric, prompt building and Claude classifier"`
 
 ### Task 10: Categorize orchestrator
 
@@ -522,7 +524,7 @@
   - A to-do needs an area when `area_id is None and project_id is None`, and it is either open and not in the Inbox, or completed within that window.
   - An open project with no area needs an area.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   ```python
   def test_select_work_scope(): ...              # one case per rule above, incl. inbox color-only and project area-only
@@ -538,13 +540,13 @@
   def test_lock_prevents_overlap(tmp_path): ...
   ```
 
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.**
   - `run_categorize` reads with `completed_since = week_of(today).prev().start`, selects the work, classifies in batches, validates, and applies. It then waits `sleep(2)`, re-reads, fills `unverified`, logs, and records the run.
   - Any `ClassifierError` or `ThingsUnavailable` records `ok=False` and re-raises.
   - CLI `sig categorize` prints `requested N, applied N, skipped N, unverified N`. It exits 0 on `AlreadyRunning` and `NotReviewed` (printing why) and exits 1 on a recorded failure.
-- [ ] **Step 4:** Run the tests. Expected: PASS.
-- [ ] **Step 5: Commit**: `git commit -m "Add categorize orchestrator"`
+- [x] **Step 4:** Run the tests. Expected: PASS.
+- [x] **Step 5: Commit**: `git commit -m "Add categorize orchestrator"`
 
 ### Task 11: First-run review, golden set and eval
 
@@ -565,41 +567,55 @@
   - `review.run_eval(classifier, golden_path, batch_size) -> EvalReport` and `review.render_eval(report) -> str`
 - `golden.jsonl` row: `{"item": <payload>, "color": <color|null>, "area": <area|null>}`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - `test_dry_run_writes_review_and_never_writes_things`
   - `test_apply_review_uses_edited_color` (the TSV row changed from yellow to green, so `add_tag` gets the green tag)
   - `test_apply_review_skips_items_colored_since_dry_run`
   - `test_apply_review_appends_golden_and_sets_meta` (`review_applied_at` is set)
   - `test_read_review_reports_bad_line`
   - `test_eval_agreement_math` (4 golden rows, classifier agrees on 3, giving `agree == 3` with the disagreement listed)
-- [ ] **Step 2:** Run the tests. Expected: FAIL.
-- [ ] **Step 3: Implement.** `--dry-run` classifies the full scope (no review gate), writes the review files, and prints the table plus the file path. `--apply-review` defaults to `app_dir()/review.tsv`.
-- [ ] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add first-run review, golden set and eval"`
+- [x] **Step 2:** Run the tests. Expected: FAIL.
+- [x] **Step 3: Implement.** `--dry-run` classifies the full scope (no review gate), writes the review files, and prints the table plus the file path. `--apply-review` defaults to `app_dir()/review.tsv`.
+- [x] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add first-run review, golden set and eval"`
+
+### Task 11b: First-review feedback (added during execution)
+
+The first dry run was reviewed in Notion. These changes came out of it and were made before any write to Things.
+
+- [x] **Classifier model:** `sonnet` alias in `config.example.toml`, with extended thinking off in `ClaudeClassifier` (`MAX_THINKING_TOKENS=0`). Test: `test_thinking_disabled_for_speed`.
+- [x] **Real list names:** `model.list_name(todo, today)` returns Inbox, Today, Anytime, Upcoming or Someday (Upcoming = Someday with a future start date). The prompt payload carries `list` and `scheduled` instead of `start`. `work_item_from_todo` takes `today`. Tests: `test_list_name_*`, `test_todo_payload_and_notes_trimmed_to_300`.
+- [x] **No blue from the classifier:** `prompt.CLASSIFIER_COLORS = ("red", "yellow", "green", "unscored")` drives the schema enum and `validate`. Test: `test_validate_rejects_blue`.
+- [x] **Check-in affirmations:** manual steps `today-reviewed` ("Today's list is reviewed") and `colors-reviewed` ("Colors look right") after the color steps. `checkin.MANUAL_STEPS` is the single list `sig checkin tick` accepts. Tests: `test_review_affirmations_are_manual_ticks`, `test_cli_checkin_tick_accepts_review_affirmations`.
+- [x] **Rubric:** green is active fun; interesting work is yellow; red includes Upcoming dates within about three days with outside consequences. Spec and README updated to match.
+- [x] **Re-run the dry run with Sonnet** and layer the user's Notion corrections on top (`review.corrections.json` in Application Support), then show the user only the differences. Outcome: Sonnet matched 12 of 13 corrections; 3 other colors changed and were approved.
+- [x] **Verification backoff:** `categorize.verify_writes` re-reads after 2, 4 and 8 s. A fixed 2 s check flagged 3 of 48 real writes that landed moments later. Tests: `test_verification_retries_while_things_catches_up`, `test_verification_gives_up_after_retries`.
 
 ### Task 12: Live rollout
 
 **Files:** none in the repo (records the outcome in this plan).
 
-- [ ] **Step 1:** Run `sig categorize --dry-run`, which only reads. Show the user the table from `review.tsv`, grouped by color.
-- [ ] **Step 2:** Collect the user's corrections in chat and edit `review.tsv` to match. Read the file back to the user.
-- [ ] **Step 3: GATE.** Ask "OK to write these colors and areas to Things?" On yes, run `sig categorize --apply-review`, then `sig status`. Confirm there are no health errors and that the colored counts match Things.
-- [ ] **Step 4: GATE.** Ask "OK to install the launchd agent (runs every 10 minutes)?" On yes, run `sig setup` (with the agent) and then `launchctl kickstart -k gui/$(id -u)/com.github.timfurlong.solve-it-grid.categorize`.
-- [ ] **Step 5:** Check `categorize.err.log` and `sig status`.
+- [x] **Step 1:** Run `sig categorize --dry-run`, which only reads. Show the user the table from `review.tsv`, grouped by color.
+- [x] **Step 2:** Collect the user's corrections in chat and edit `review.tsv` to match. Read the file back to the user.
+- [x] **Step 3: GATE.** Ask "OK to write these colors and areas to Things?" On yes, run `sig categorize --apply-review`, then `sig status`. Confirm there are no health errors and that the colored counts match Things.
+- [x] **Step 4: GATE.** Ask "OK to install the launchd agent (runs every 10 minutes)?" On yes, run `sig setup` (with the agent) and then `launchctl kickstart -k gui/$(id -u)/com.github.timfurlong.solve-it-grid.categorize`.
+- [x] **Step 5:** Check `categorize.err.log` and `sig status`.
   - If the error mentions Full Disk Access or "Operation not permitted", tell the user to add the resolved Python binary (`readlink -f ~/.local/share/uv/tools/solve-it-grid/bin/python`) under System Settings > Privacy & Security > Full Disk Access, then kickstart again.
   - Done means one successful scheduled run is recorded (`requested 0, applied 0` is fine).
-- [ ] **Step 6:** Run `sig eval` and record the baseline agreement in this plan.
+- [x] **Step 6:** Run `sig eval` and record the baseline agreement in this plan.
+
+  **Outcome (2026-09-29):** 48 colors and 4 areas written, confirmed in Things. The launchd agent's first scheduled run succeeded without Full Disk Access. `sig eval` baseline: 47/49 (95%). Both misses were completed incidents judged as of today, so `rubric.md` gained a rule to judge completed to-dos as of when the work happened, giving 48/49 (97%). The remaining miss (a completed investigation the user rated yellow for low priority) needs priority context the model doesn't have.
 
 ### Task 13: `/things` skill coloring
 
 **Files:**
 - Modify: `~/.claude/skills/things/SKILL.md` (outside the repo, so there is no repo commit)
 
-- [ ] **Step 1: GATE.** Show the user the proposed diff and ask before editing:
+- [x] **Step 1: GATE.** Show the user the proposed diff and ask before editing:
   - Add `### 2b. Pick a color` after "Determine the area". It reads `/Users/timfurlong/code/solve-it-grid/rubric.md` and `~/Library/Application Support/solve-it-grid/rubric.local.md` (if present), chooses exactly one color tag, and passes it in `tags` on `add_todo`.
   - When merging into an existing to-do that already has a color tag, keep it.
   - One new row in "Common mistakes": "Adding a to-do without a color tag. Pick one from the rubric. The categorizer is only the backstop."
-- [ ] **Step 2:** On yes, apply the edit.
-- [ ] **Step 3: GATE.** Ask whether to verify by creating a real test to-do. If yes, create one through the skill, confirm it has exactly one color tag, then ask whether to delete it (the user deletes it in Things).
+- [x] **Step 2:** On yes, apply the edit.
+- [x] **Step 3: GATE.** Ask whether to verify by creating a real test to-do. (Skipped at the user's choice: the first real `/things` add shows the color in its confirmation line.) If yes, create one through the skill, confirm it has exactly one color tag, then ask whether to delete it (the user deletes it in Things).
 
 ### Task 14: README, license and spec sync
 
@@ -607,8 +623,8 @@
 - Create: `README.md`, `LICENSE`
 - Modify: `docs/specs/2026-09-28-solve-it-grid-design.md` (only if the build diverged)
 
-- [ ] **Step 1: Write `LICENSE`** (MIT, "Copyright (c) 2026 Tim Furlong").
-- [ ] **Step 2: Write `README.md`** in this order:
+- [x] **Step 1: Write `LICENSE`** (MIT, "Copyright (c) 2026 Tim Furlong").
+- [x] **Step 2: Write `README.md`** in this order:
   1. What it is (credit and link the Solve It Grid page)
   2. How it works (4 bullets)
   3. Requirements: macOS, Things 3 with Things URLs enabled, Claude Code CLI logged in, uv
@@ -621,14 +637,16 @@
   10. License
 
   Describe only what exists: no roadmap, no alternatives.
-- [ ] **Step 3:** Diff the spec against what was built (CLI flags, file names, JSON keys, the Task 8 Step 6 outcome) and correct the spec wherever it's now wrong.
-- [ ] **Step 4: Public-readiness check.** `git grep -nIiE "gmail|auth-token=[A-Za-z0-9]|@(gmail|icloud)\.com"` returns nothing. No real to-do titles appear in the repo (`git grep -nI` for 3 titles from `golden.jsonl` returns nothing).
-- [ ] **Step 5: Commit**: `git commit -m "Add README and license; sync spec with the build"`
+- [x] **Step 3:** Diff the spec against what was built (CLI flags, file names, JSON keys, the Task 8 Step 6 outcome) and correct the spec wherever it's now wrong.
+- [x] **Step 4: Public-readiness check.** `git grep -nIiE "gmail|auth-token=[A-Za-z0-9]|@(gmail|icloud)\.com"` returns nothing. No real to-do titles appear in the repo (`git grep -nI` for 3 titles from `golden.jsonl` returns nothing).
+- [x] **Step 5: Commit**: `git commit -m "Add README and license; sync spec with the build"`
 
 ### Task 15: Phase 2 readiness
 
 **Files:**
 - Modify: `docs/specs/2026-09-28-solve-it-grid-design.md` (menu bar sections), if needed
 
-- [ ] **Step 1:** Run `sig status --json` against real data and compare it key by key with the spec's `sig status` contract and the menu bar sections (icon states, popover rows, error state triggers). Fix any mismatch in the spec so the phase 2 plan can be written from it directly.
-- [ ] **Step 2:** List for the user anything phase 1 learned that changes phase 2 (for example, how long status takes to run, since the app polls every 60 s). Commit any spec edits: `git commit -m "Sync spec menu bar contract with sig status"`
+- [x] **Step 1:** Run `sig status --json` against real data and compare it key by key with the spec's `sig status` contract and the menu bar sections (icon states, popover rows, error state triggers). Fix any mismatch in the spec so the phase 2 plan can be written from it directly.
+- [x] **Step 2:** List for the user anything phase 1 learned that changes phase 2 (for example, how long status takes to run, since the app polls every 60 s). Commit any spec edits: `git commit -m "Sync spec menu bar contract with sig status"`
+
+  **Outcome (2026-09-29):** `sig status --json` against real data runs in about 0.2 s, so 60 s polling is cheap. The contract gained `manual` on each check-in step (the app renders manual steps as checkboxes) and `week_start` on each pending chip (so a leftover chip from last week isn't matched to this week's unit). The spec's popover now shows the two review affirmations.
