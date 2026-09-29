@@ -611,7 +611,7 @@ The first dry run was reviewed in Notion. These changes came out of it and were 
 - Modify: `~/.claude/skills/things/SKILL.md` (outside the repo, so there is no repo commit)
 
 - [x] **Step 1: GATE.** Show the user the proposed diff and ask before editing:
-  - Add `### 2b. Pick a color` after "Determine the area". It reads `/Users/timfurlong/code/solve-it-grid/rubric.md` and `~/Library/Application Support/solve-it-grid/rubric.local.md` (if present), chooses exactly one color tag, and passes it in `tags` on `add_todo`.
+  - Add `### 2b. Pick a color` after "Determine the area". It reads `<repo>/rubric.md` and `~/Library/Application Support/solve-it-grid/rubric.local.md` (if present), chooses exactly one color tag, and passes it in `tags` on `add_todo`.
   - When merging into an existing to-do that already has a color tag, keep it.
   - One new row in "Common mistakes": "Adding a to-do without a color tag. Pick one from the rubric. The categorizer is only the backstop."
 - [x] **Step 2:** On yes, apply the edit.

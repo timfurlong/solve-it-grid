@@ -1,24 +1,48 @@
+<p align="center">
+  <img src="docs/assets/cover.png" alt="The Solve It Grid: two axes, fun and stimulating, split into red Fires, green Fueling Fun, yellow Shoulds and Oughts and blue Passive Fun. A poker chip reading Solve It Grid sits where the axes cross, and yellow and green chips sit in their quadrants." width="100%">
+</p>
+
 # Solve It Grid for Things
 
-A small reward system for [Things 3](https://culturedcode.com/things/), built around the ADHD [Solve It Grid](https://www.thecenterforadhd.com/adhd-energy-balance-solve-it-grid/). Every to-do gets a grid color, and each week a small quota of yellow and green to-dos earns physical poker chips that you move from one jar to another the moment you earn them.
+A small reward system for [Things 3](https://culturedcode.com/things/), built around the ADHD Solve It Grid. Every to-do gets a grid color, and each week a few yellow and green to-dos earn real poker chips that you move from one jar to another the moment you earn them.
 
-It's built for one person's setup (a Mac, Things 3, and a Claude subscription), but it's small and readable if you want to adapt it.
+## The Solve It Grid
+
+The Solve It Grid comes from Tamara Rosier, PhD, in her book *Your Brain's Not Broken*. It sorts what you do on two axes, how fun it is and how stimulating it is:
+
+| | Not fun | Fun |
+|---|---|---|
+| **Stimulating** | 🔴 **Fires**: deadlines, emergencies, someone waiting on you | 🟢 **Fueling Fun**: exercise, friends, creative projects |
+| **Not stimulating** | 🟡 **Shoulds and Oughts**: laundry, taxes, admin | 🔵 **Passive Fun**: TV, scrolling, games |
+
+Red is easy to start because urgency switches the ADHD brain on, but it's draining. Blue is where you go to recover, but it recharges you slowly. Left alone, days slide back and forth between the two, while yellow piles up and green, the stuff that actually gives energy back, gets squeezed out. The fix is to start in green and spend that energy on yellow. [This write-up](https://www.thecenterforadhd.com/adhd-energy-balance-solve-it-grid/) is a good five-minute read.
+
+## Why this exists
+
+Knowing the grid is one thing. Steering a real week toward yellow and green is another. So this rewards only those two:
+
+- **Red is never rewarded.** It gets done anyway, and rewarding it would reward crisis mode.
+- **Blue stays off the list.** Passive downtime doesn't need a to-do.
+- **A small weekly goal.** 1 work yellow, 1 home yellow and 2 greens.
+- **A reward you can hold, right away.** Each of those earns a physical poker chip the moment it's done. Moving it to the done jar is the reward, and the jar is the scoreboard.
+- **No extra bookkeeping.** Claude colors your to-dos in the background, so it all runs on the Things list you already keep. A short daily check-in keeps that list healthy.
 
 ## How it works
 
-- **Colors.** Every to-do gets one emoji tag: 🔴 red (urgent, not fun), 🟡 yellow (necessary, dull), 🟢 green (active fun), 🔵 blue (passive downtime), or ⚪ unscored (packing-list entries and other non-tasks). Claude (Sonnet, through the Claude Code CLI) assigns them every 10 minutes, and never proposes blue. Anything you tag by hand is left alone.
-- **Weekly goal.** 1 work yellow, 1 home yellow, and 2 greens. That's four units, and each unit earns a chip the moment it's done. Red is never scored: it gets done anyway.
-- **Chips.** Two jars on the desk, one of yellow and green chips to earn and one for chips you've earned. When `solve-it-grid status` says to move a chip, move it, then run `solve-it-grid chip ack`.
-- **Daily check-in.** On workdays from 9:00: empty the Inbox, put a red, a yellow and a green in Today, confirm Today and the colors look right, and fix any to-do with a missing area or a broken tag.
+- Every to-do gets one emoji tag: 🔴 🟡 🟢 🔵, or ⚪ for list entries that aren't really tasks. Claude (through the Claude Code CLI) assigns them every 10 minutes, and anything you tag by hand is left alone.
+- A ring in the menu bar (or `solve-it-grid status`) shows the week's four units and tells you when to move a chip.
+- On workdays, the check-in has you empty the Inbox and put a red, a yellow and a green in Today.
 
-## Requirements
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/popover-dark.png">
+    <img src="docs/assets/popover-light.png" alt="The menu bar popover: this week's four chips (work yellow and one green in the jar, home yellow waiting to be moved, one green not yet earned), a button reading I moved the yellow chip, and today's check-in with four steps left." width="340">
+  </picture>
+</p>
 
-- macOS
-- Things 3, with Things URLs enabled (Things > Settings > General > Enable Things URLs)
-- [Claude Code](https://claude.com/claude-code) installed and logged in (`claude` on your PATH)
-- [uv](https://docs.astral.sh/uv/)
+## Get started
 
-## Install
+You'll need a Mac, Things 3 with Things URLs turned on, [Claude Code](https://claude.com/claude-code) logged in, and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/timfurlong/solve-it-grid.git
@@ -27,83 +51,22 @@ uv tool install --editable ./engine
 solve-it-grid setup --no-agent
 ```
 
-`solve-it-grid setup` writes `~/Library/Application Support/solve-it-grid/config.toml`, creates the five color tags in Things, and checks that your areas and Things URLs are in place. Edit `[areas]` in the config so the titles match your Things areas exactly, emoji included.
+Nothing is written to Things until you've reviewed Claude's first batch of colors. The [setup guide](docs/setup.md) walks through that review, the background agent and the menu bar app.
 
-## First review
+## Docs
 
-Nothing is written to Things until you've reviewed the first batch.
-
-```bash
-solve-it-grid categorize --dry-run        # proposals go to review.tsv in Application Support
-# edit the color and area columns of review.tsv
-solve-it-grid categorize --apply-review   # writes them to Things and saves them as your golden set
-solve-it-grid setup                       # installs the launchd agent that categorizes every 10 minutes
-```
-
-`solve-it-grid eval` scores Claude against your golden set. To tune it, edit `rubric.md`, or add your own examples to `rubric.local.md` in Application Support.
-
-## Daily use
-
-```bash
-solve-it-grid status            # this week's units, chips to move, and today's check-in
-solve-it-grid chip ack all      # after moving chips to the done jar
-solve-it-grid checkin done      # after the morning check-in
-```
-
-## Menu bar app
-
-The menu bar app shows the week as a ring and runs the daily check-in. It only talks to the `solve-it-grid` CLI, so install that first.
-
-```bash
-menubar/scripts/build-app.sh --install
-```
-
-That builds `Solve It Grid.app`, signs it (with your Apple Development identity if you have one, otherwise ad-hoc), copies it to `~/Applications` and launches it. On first launch:
-
-- **Allow notifications.** If the prompt doesn't appear or gets dismissed, turn on Allow notifications in System Settings > Notifications > Solve It Grid. Set the alert style to **Persistent** (called Alerts before macOS 26) so the morning check-in stays on screen until you handle it.
-- The app adds itself to **Login Items** (System Settings > General > Login Items).
-
-**Reading the ring.** Four segments, one per unit: the yellows on the left (work bottom-left, home top-left) and the greens on the right, like the grid's not-fun and fun columns. A filled segment is done. The center shows what needs you, most important first:
-
-| Center | Meaning |
-|---|---|
-| orange dot | today's check-in is due |
-| pulsing colored dot | a chip is waiting to be moved |
-| checkmark | the week is hit |
-
-A red warning triangle replaces the ring when something is wrong (the CLI is missing, the categorizer keeps failing, or setup needs attention). Open the popover for what failed and how to fix it.
-
-**Checking the layout.** `"~/Applications/Solve It Grid.app/Contents/MacOS/SolveItGrid" --snapshot <dir>` renders the popover and history window, in light and dark mode, to PNGs and quits. Add `--status <file.json>` to render a saved status instead of the live one.
-
-**CLI location.** The app runs `~/.local/bin/solve-it-grid`. To point it elsewhere:
-
-```bash
-defaults write com.github.timfurlong.solve-it-grid cliPath /path/to/solve-it-grid
-```
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| `solve-it-grid setup [--no-agent]` | config, color tags, launchd agent |
-| `solve-it-grid status [--json]` | week progress, chips, check-in, health |
-| `solve-it-grid categorize [--dry-run \| --apply-review [PATH]]` | color and file to-dos |
-| `solve-it-grid eval` | classifier agreement with your golden set |
-| `solve-it-grid chip ack <id...\|all>` | confirm chips were moved |
-| `solve-it-grid checkin done` / `solve-it-grid checkin tick <step>` | check-in bookkeeping (`today-reviewed`, `colors-reviewed`, `someday-review`) |
+- [Setup](docs/setup.md): install, first review, Full Disk Access, the menu bar app
+- [Using Solve It Grid](docs/usage.md): colors, goals and chips, the check-in, the ring, commands, tuning
+- [How it works](docs/how-it-works.md): architecture, the categorizer, privacy
+- [Development](docs/development.md): layout, tests, contributing
+- [Design spec](docs/specs/2026-09-28-solve-it-grid-design.md)
 
 ## Privacy
 
-To-do titles, notes (the first 300 characters), project and heading names are sent to Claude for classification. Everything else stays on your Mac, in `~/Library/Application Support/solve-it-grid/`: the config, the state database, the classification log, and your golden set. The Things URL token is read from the Things database when needed and is never stored or logged.
+To-do titles, the start of their notes, and project and heading names are sent to Claude for classification. Everything else stays on your Mac. See [Privacy](docs/how-it-works.md#privacy) for exactly what's stored where.
 
-## Full Disk Access
+## Credits and license
 
-The launchd agent reads the Things database from Things' app container. If `categorize.err.log` in Application Support says "Operation not permitted", add the Python that runs `solve-it-grid` to System Settings > Privacy & Security > Full Disk Access. You can find it with:
+The Solve It Grid is Tamara Rosier's framework, from *Your Brain's Not Broken*. This project isn't affiliated with her or with Cultured Code, the makers of Things.
 
-```bash
-readlink -f ~/.local/share/uv/tools/solve-it-grid/bin/python
-```
-
-## License
-
-MIT
+MIT. See [LICENSE](LICENSE).

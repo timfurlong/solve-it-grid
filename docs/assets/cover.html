@@ -1,0 +1,145 @@
+<!doctype html>
+<!--
+  Source for cover.png, the README cover. To re-render it (2x, transparent corners):
+
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+    --force-device-scale-factor=2 --window-size=1280,640 --default-background-color=00000000 \
+    --virtual-time-budget=5000 --screenshot=docs/assets/cover.png docs/assets/cover.html
+
+  The Solve It Grid is adapted from Tamara Rosier, PhD, "Your Brain's Not Broken".
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Solve It Grid cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=block" rel="stylesheet">
+<style>
+  :root {
+    --red: #E2483D;
+    --yellow: #F4C23D;
+    --green: #23A15B;
+    --blue: #2B67D1;
+    --ivory: #FFFCF5;
+    --ink: #1F2330;
+    --yellow-ink: #3D2F06;
+  }
+  html, body { margin: 0; background: transparent; }
+  svg { display: block; font-family: "Bricolage Grotesque", sans-serif; }
+  .quadrant-name { font-size: 44px; font-weight: 800; letter-spacing: -0.01em; font-variation-settings: "opsz" 96; }
+  .axis { font-size: 21px; font-weight: 600; fill: #fff; font-variation-settings: "opsz" 24; }
+  .rim { font-size: 17px; font-weight: 600; fill: var(--ink); letter-spacing: 0.03em; font-variation-settings: "opsz" 14; }
+  .title { font-size: 50px; font-weight: 800; fill: var(--ink); letter-spacing: -0.02em; font-variation-settings: "opsz" 96; }
+</style>
+</head>
+<body>
+<svg width="1280" height="640" viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="frame"><rect width="1280" height="640" rx="28"/></clipPath>
+    <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+    <filter id="lift-small" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#fff"/>
+    </marker>
+    <!-- Rim text paths around the big chip, centered on (640, 320). -->
+    <path id="rim-top" d="M 520,320 A 120,120 0 0 1 760,320"/>
+    <path id="rim-bottom" d="M 506,320 A 134,134 0 0 0 774,320"/>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <!-- The four quadrants: stimulating on top, fun on the right. -->
+    <rect x="0" y="0" width="640" height="320" style="fill: var(--red)"/>
+    <rect x="640" y="0" width="640" height="320" style="fill: var(--green)"/>
+    <rect x="0" y="320" width="640" height="320" style="fill: var(--yellow)"/>
+    <rect x="640" y="320" width="640" height="320" style="fill: var(--blue)"/>
+
+    <!-- Axes -->
+    <g stroke="#fff" stroke-width="7" stroke-linecap="round">
+      <line x1="640" y1="300" x2="640" y2="38" marker-end="url(#arrow)"/>
+      <line x1="640" y1="340" x2="640" y2="602" marker-end="url(#arrow)"/>
+      <line x1="620" y1="320" x2="40" y2="320" marker-end="url(#arrow)"/>
+      <line x1="660" y1="320" x2="1240" y2="320" marker-end="url(#arrow)"/>
+    </g>
+    <text class="axis" x="620" y="56" text-anchor="end">Stimulating</text>
+    <text class="axis" x="660" y="600">Not stimulating</text>
+    <text class="axis" x="44" y="302">Not fun</text>
+    <text class="axis" x="1236" y="302" text-anchor="end">Fun</text>
+
+    <!-- Quadrant names -->
+    <text class="quadrant-name" x="56" y="104" fill="#fff">Fires</text>
+    <text class="quadrant-name" x="1224" y="104" fill="#fff" text-anchor="end">Fueling Fun</text>
+    <text class="quadrant-name" x="56" y="580" style="fill: var(--yellow-ink)">Shoulds and Oughts</text>
+    <text class="quadrant-name" x="1224" y="580" fill="#fff" text-anchor="end">Passive Fun</text>
+
+  </g>
+
+  <!-- Earned chips: only yellow and green are rewarded. -->
+  <g filter="url(#lift-small)">
+    <use href="#small-yellow" x="312" y="438"/>
+    <use href="#small-yellow" x="388" y="420"/>
+    <use href="#small-green" x="944" y="214"/>
+    <use href="#small-green" x="1020" y="196"/>
+  </g>
+
+  <!-- The big chip -->
+  <g filter="url(#lift)">
+    <circle cx="640" cy="320" r="180" style="fill: var(--ivory)"/>
+  </g>
+  <g id="big-spots"></g>
+  <circle cx="640" cy="320" r="147" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="3 7" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="640" cy="320" r="104" fill="#fff" stroke="var(--ink)" stroke-width="2" opacity="1"/>
+  <text class="rim"><textPath href="#rim-top" startOffset="50%" text-anchor="middle">A reward system for Things 3</textPath></text>
+  <text class="rim"><textPath href="#rim-bottom" startOffset="50%" text-anchor="middle">Adapted from Tamara Rosier, PhD</textPath></text>
+  <text class="title" x="640" y="312" text-anchor="middle">Solve It</text>
+  <text class="title" x="640" y="360" text-anchor="middle">Grid</text>
+</svg>
+
+<script>
+  // Build the edge spots and small chips procedurally so every chip shares one geometry.
+  const NS = "http://www.w3.org/2000/svg";
+  const css = getComputedStyle(document.documentElement);
+  const color = name => css.getPropertyValue(`--${name}`).trim();
+
+  function sector(cx, cy, r0, r1, a0, a1) {
+    const p = (r, a) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+    const [x0, y0] = p(r1, a0), [x1, y1] = p(r1, a1), [x2, y2] = p(r0, a1), [x3, y3] = p(r0, a0);
+    return `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3} z`;
+  }
+
+  function el(tag, attrs, parent) {
+    const node = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    parent.appendChild(node);
+    return node;
+  }
+
+  // Big chip: eight edge spots cycling through the grid's colors.
+  const big = document.getElementById("big-spots");
+  const cycle = ["red", "green", "blue", "yellow"];
+  for (let i = 0; i < 8; i++) {
+    const mid = (i / 8) * 2 * Math.PI + Math.PI / 8;
+    el("path", { d: sector(640, 320, 152, 180, mid - 0.2, mid + 0.2), fill: color(cycle[i % 4]) }, big);
+  }
+
+  // Small chips: chip color with six white edge spots, a dashed ring and a lighter inlay.
+  const defs = document.querySelector("defs");
+  for (const name of ["yellow", "green"]) {
+    const g = el("g", { id: `small-${name}` }, defs);
+    const shade = name === "yellow" ? "#E0A91C" : "#178A4A";
+    el("circle", { r: 44, fill: shade }, g);
+    el("circle", { r: 44, fill: color(name), stroke: "rgba(0,0,0,0.18)", "stroke-width": 1.5 }, g);
+    for (let i = 0; i < 6; i++) {
+      const mid = (i / 6) * 2 * Math.PI;
+      el("path", { d: sector(0, 0, 35, 44, mid - 0.24, mid + 0.24), fill: "#fff" }, g);
+    }
+    el("circle", { r: 29, fill: "none", stroke: "#fff", "stroke-width": 1.5, "stroke-dasharray": "2 4", opacity: 0.9 }, g);
+    el("circle", { r: 21, fill: shade, opacity: 0.35 }, g);
+  }
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # Solve It Grid for Things: design
 
 - **Date:** 2026-09-28
-- **Status:** draft, awaiting review
+- **Status:** implemented
 - **Source framework:** [ADHD Energy Balance: the Solve It Grid](https://www.thecenterforadhd.com/adhd-energy-balance-solve-it-grid/)
 
 ## Summary
@@ -31,7 +31,7 @@ A fifth marker, **unscored**, covers to-dos that are not standalone tasks: packi
 
 ## Architecture
 
-Everything runs on the MacBook Pro, where Things, the menu bar and the user are. Things syncs completions from the phone when the laptop wakes, and the reward is only ever seen at the Mac, so nothing needs to run while it sleeps.
+Everything runs on the Mac, where Things, the menu bar and the user are. Things syncs completions from the phone when the Mac wakes, and the reward is only ever seen at the Mac, so nothing needs to run while it sleeps.
 
 ```
             ┌──────────────────────────────┐
@@ -39,18 +39,18 @@ Everything runs on the MacBook Pro, where Things, the menu bar and the user are.
             └──────▲───────────────┬───────┘
      URL scheme    │               │ things.py (read-only)
      (writes)      │               ▼
-            ┌──────┴──────────────────────────┐      claude -p (Sonnet)     
- launchd ──►│ engine: `solve-it-grid` CLI (Python)      │─────► JSON classifier, no tools
-  10 min    │  categorize · status · chips    │
-            └──────▲───────────────┬──────────┘
-                   │ solve-it-grid chip ack  │ solve-it-grid status --json
-                   │ solve-it-grid checkin   ▼
-            ┌──────┴──────────────────────────┐
-            │ menu bar app (SwiftUI)          │──► notifications
-            └─────────────────────────────────┘
-                         │
-                         ▼  "Move a chip"
-                  two jars of poker chips (physical)
+            ┌──────┴───────────────────────┐    claude -p (Sonnet)
+ launchd ──►│ engine: solve-it-grid CLI    │───► JSON classifier, no tools
+  10 min    │ categorize · status · chips  │
+            └──────▲───────────────┬───────┘
+     chip ack,     │               │ status --json
+     checkin       │               ▼
+            ┌──────┴───────────────────────┐
+            │ menu bar app (SwiftUI)       │───► notifications
+            └──────────────────────────────┘
+                           │
+                           ▼  "Move a chip"
+                two jars of poker chips (physical)
 ```
 
 | Component | Responsibility | Depends on |
@@ -58,7 +58,7 @@ Everything runs on the MacBook Pro, where Things, the menu bar and the user are.
 | `engine/` (`solve-it-grid`) | All logic: reading Things, categorizing, scoring, chips, check-in state, holidays | things.py, `claude` CLI, Things URL scheme, SQLite |
 | `menubar/` | Rendering, notifications, snooze timers | `solve-it-grid` CLI only |
 | launchd agent | Runs `solve-it-grid categorize` every 10 minutes | `solve-it-grid` |
-| `/things` skill (user-level, outside this repo) | Colors to-dos at creation time | `rubric.md` |
+| `/things` Claude Code skill (optional, user-level, outside this repo) | Colors to-dos at creation time | `rubric.md` |
 | Physical tracker | Two jars and yellow/green poker chips | the user |
 
 The menu bar app never reads Things or the state database directly. Every read goes through `solve-it-grid status --json` and every write through a `solve-it-grid` subcommand, so all behavior lives in one tested Python codebase.
@@ -347,7 +347,7 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 
 ## Repository
 
-- GitHub: `timfurlong/solve-it-grid`, private at first and kept ready to publish at any time.
+- GitHub: `timfurlong/solve-it-grid`, public, MIT licensed.
 - Layout:
 
   ```
