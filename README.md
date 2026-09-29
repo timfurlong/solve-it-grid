@@ -4,7 +4,7 @@
 
 # Solve It Grid for Things
 
-A small reward system for [Things 3](https://culturedcode.com/things/), built around the ADHD Solve It Grid. Every to-do gets a grid color, and each week a few yellow and green to-dos earn real poker chips that you move from one jar to another the moment you earn them.
+A macOS menu bar app (and CLI) that turns [Things 3](https://culturedcode.com/things/) into a small reward system, built around the ADHD Solve It Grid. Every to-do gets a grid color, and each week a few yellow and green to-dos earn real poker chips that you move from one jar to another the moment you earn them.
 
 ## The Solve It Grid
 
@@ -24,8 +24,14 @@ Knowing the grid is one thing. Steering a real week toward yellow and green is a
 - **Red is never rewarded.** It gets done anyway, and rewarding it would reward crisis mode.
 - **Blue stays off the list.** Passive downtime doesn't need a to-do.
 - **A small weekly goal.** 1 work yellow, 1 home yellow and 2 greens.
-- **A reward you can hold, right away.** Each of those earns a physical poker chip the moment it's done. Moving it to the done jar is the reward, and the jar is the scoreboard.
+- **Rewarded right away.** A chip is earned the moment the to-do is done, not at the end of the week.
 - **No extra bookkeeping.** Claude colors your to-dos in the background, so it all runs on the Things list you already keep. A short daily check-in keeps that list healthy.
+
+## Two jars of poker chips
+
+Solve It Grid is meant to be used with a physical reward, borrowed from the [Paper Clip Strategy](https://jamesclear.com/paper-clips) in James Clear's *Atomic Habits*. A stockbroker kept two jars on his desk and moved a paper clip from one to the other after every sales call, so his progress was something he could see and touch.
+
+Here it's two jars of poker chips: one to earn from and one for the chips you've earned. When a yellow or green goal is done, the app tells you to move a chip of that color, and you click once you have. Poker chips were a fairly arbitrary pick. They're just heavy, and dropping one in the jar is satisfying.
 
 ## How it works
 
