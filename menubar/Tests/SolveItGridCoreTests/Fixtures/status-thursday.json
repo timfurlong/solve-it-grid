@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-10-01T10:14:00-06:00",
+  "week": {"start": "2026-09-28", "end": "2026-10-04", "hit": false},
+  "units": [
+    {"id": "yellow-work", "color": "yellow", "label": "Work yellow", "done": true},
+    {"id": "yellow-home", "color": "yellow", "label": "Home yellow", "done": true},
+    {"id": "green-1", "color": "green", "label": "Green", "done": true},
+    {"id": "green-2", "color": "green", "label": "Green", "done": false}
+  ],
+  "red_done": 3,
+  "chips": {
+    "pending": [{"id": 57, "week_start": "2026-09-28", "unit": "yellow-home", "color": "yellow",
+                 "awarded_at": "2026-10-01T10:12:31-06:00"}],
+    "total_earned": 14
+  },
+  "streak": {"current": 3, "best": 5},
+  "checkin": {
+    "workday": true, "due": true, "done": false,
+    "steps": [
+      {"id": "inbox", "label": "Inbox is empty", "done": true, "manual": false,
+       "links": [{"label": "Show", "url": "things:///show?id=inbox"}]},
+      {"id": "red", "label": "A red is in Today", "done": true, "manual": false,
+       "links": [{"label": "Show", "url": "things:///show?query=%F0%9F%94%B4"}]},
+      {"id": "yellow", "label": "A yellow is in Today", "done": true, "manual": false,
+       "links": [{"label": "Show", "url": "things:///show?query=%F0%9F%9F%A1"}]},
+      {"id": "green", "label": "A green is in Today", "done": false, "manual": false,
+       "links": [{"label": "Show", "url": "things:///show?query=%F0%9F%9F%A2"}]},
+      {"id": "today-reviewed", "label": "Today's list is reviewed", "done": false, "manual": true,
+       "links": [{"label": "Show", "url": "things:///show?id=today"}]},
+      {"id": "colors-reviewed", "label": "Colors look right", "done": false, "manual": true,
+       "links": [{"label": "Show", "url": "things:///show?id=today"}]},
+      {"id": "areas", "label": "Give 1 item an area", "done": false, "manual": false,
+       "links": [{"label": "Loose task", "url": "things:///show?id=abc"}]}
+    ]
+  },
+  "last_week": {"start": "2026-09-21", "hit": true},
+  "history": [
+    {"start": "2026-09-14", "units_done": 4, "hit": true, "chips": 4},
+    {"start": "2026-09-21", "units_done": 4, "hit": true, "chips": 4}
+  ],
+  "health": {"ok": true, "errors": []},
+  "future_field": 1
+}

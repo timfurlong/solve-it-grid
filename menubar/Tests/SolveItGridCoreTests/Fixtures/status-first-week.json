@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-09-28T09:05:00-06:00",
+  "week": {"start": "2026-09-28", "end": "2026-10-04", "hit": false},
+  "units": [
+    {"id": "yellow-work", "color": "yellow", "label": "Work yellow", "done": false},
+    {"id": "yellow-home", "color": "yellow", "label": "Home yellow", "done": false},
+    {"id": "green-1", "color": "green", "label": "Green", "done": false},
+    {"id": "green-2", "color": "green", "label": "Green", "done": false}
+  ],
+  "red_done": 0,
+  "chips": {"pending": [], "total_earned": 0},
+  "streak": {"current": 0, "best": 0},
+  "checkin": {
+    "workday": true, "due": true, "done": false,
+    "steps": [
+      {"id": "inbox", "label": "Inbox is empty", "done": false, "manual": false, "links": []}
+    ]
+  },
+  "last_week": null,
+  "history": [],
+  "health": {"ok": true, "errors": []}
+}

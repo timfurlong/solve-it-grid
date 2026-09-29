@@ -95,8 +95,8 @@ The app never touches Things or the state database. It reads through `solve-it-g
   - `Health { ok: Bool; errors: [HealthError] }`, `HealthError { source: String; message: String; since: String? }`
   - `static func Status.decode(_ data: Data) throws -> Status`
 
-- [ ] **Step 1: Write `Package.swift`** per Global Constraints. The test target has `resources: [.copy("Fixtures")]`.
-- [ ] **Step 2: Write the fixtures.**
+- [x] **Step 1: Write `Package.swift`** per Global Constraints. The test target has `resources: [.copy("Fixtures")]`.
+- [x] **Step 2: Write the fixtures.**
   - `status-thursday.json` is the spec's example (`solve-it-grid status --json` section), extended so it has:
     - all four units: yellow-work done, yellow-home done, green-1 done, green-2 not
     - one pending chip for `yellow-home` with `week_start` `2026-09-28`
@@ -107,7 +107,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - two history rows
     - an extra top-level key `"future_field": 1`
   - `status-first-week.json` has `last_week: null`, `history: []`, `chips.pending: []`, and one step whose `links` is `[]`.
-- [ ] **Step 3: Write failing tests**
+- [x] **Step 3: Write failing tests**
 
   ```swift
   @Test func decodesThursdayFixture() throws {
@@ -124,10 +124,10 @@ The app never touches Things or the state database. It reads through `solve-it-g
   @Test func unknownColorFailsLoudly() { /* "purple" in a unit -> Status.decode throws */ }
   ```
 
-- [ ] **Step 4:** Run `cd menubar && swift test`. Expected: FAIL (types missing).
-- [ ] **Step 5: Implement `Status.swift`.**
-- [ ] **Step 6:** Run `swift test`. Expected: PASS. Also run `swift build`, which should build both targets.
-- [ ] **Step 7: Commit**: `git commit -m "Add menu bar package and status decoding"`
+- [x] **Step 4:** Run `cd menubar && swift test`. Expected: FAIL (types missing).
+- [x] **Step 5: Implement `Status.swift`.**
+- [x] **Step 6:** Run `swift test`. Expected: PASS. Also run `swift build`, which should build both targets.
+- [x] **Step 7: Commit**: `git commit -m "Add menu bar package and status decoding"`
 
 ### Task 2: Icon state and copy
 
@@ -154,7 +154,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - `Copy.lastWeekLine(_ lastWeek: LastWeek?, isMonday: Bool) -> String?`
 - Rules:
   - **The state is `.error`** when `failure != nil` or `status?.health.ok == false`.
-  - **Segments** follow `status.units` in order (drawn clockwise from 12 o'clock). A nil status gives four open segments `[yellow, yellow, green, green]`.
+  - **Segments** follow `status.units` in order (drawn clockwise from 6 o'clock, so the yellows sit on the left and the greens on the right). A nil status gives four open segments `[yellow, yellow, green, green]`.
   - **The center** follows the spec's priority:
     1. `checkin.due` → `.checkinDue`
     2. any pending chip → `.chipWaiting(first pending chip's color)`
@@ -164,7 +164,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - `"Solve It Grid needs attention"` in the error state
     - otherwise `"Solve It Grid: 3 of 4 done"`, plus `", check-in due"`, `", chip waiting"` or `", week hit"` for the center
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - `errorWhenFailure`
   - `errorWhenHealthNotOk`
   - `segmentsFollowUnits` (Thursday fixture gives `[y done, y done, g done, g open]`)
@@ -175,9 +175,9 @@ The app never touches Things or the state database. It reads through `solve-it-g
   - `accessibilityLabelThursday == "Solve It Grid: 3 of 4 done, check-in due"`
   - one test per copy function covering the singular and plural forms
   - `lastWeekLineOnlyOnMonday` (nil when `isMonday` is false or `lastWeek` is nil; `"Last week: missed"` when hit is false)
-- [ ] **Step 2:** Run `swift test`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add icon state and popover copy"`
+- [x] **Step 2:** Run `swift test`. Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add icon state and popover copy"`
 
 ### Task 3: Chip board
 
@@ -203,7 +203,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - `"I moved the <color> chip"` for exactly one
     - `"I moved <n> chips"` for more than one
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
   ```swift
   @Test func thursdayBoard() throws {
@@ -217,9 +217,9 @@ The app never touches Things or the state database. It reads through `solve-it-g
   @Test func noPendingNoAckLabel() { ... }
   ```
 
-- [ ] **Step 2:** Run `swift test`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add chip board model"`
+- [x] **Step 2:** Run `swift test`. Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add chip board model"`
 
 ### Task 4: CLI client
 
@@ -252,7 +252,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
   - A non-zero exit throws `.failed(exitCode:stderr:)` with the trimmed stderr.
   - Bad JSON throws `.decoding(message)`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - Using a `FakeRunner` that records calls and returns a canned `CommandResult`:
     - `statusArgumentsAndDecode`
     - `ackArgumentsAndEmptyIsNoop`
@@ -263,9 +263,9 @@ The app never touches Things or the state database. It reads through `solve-it-g
   - Using the real `ProcessRunner`:
     - `processRunnerCapturesOutput`: `/bin/echo hi` gives stdout `"hi\n"`, exit 0
     - `processRunnerTimesOut`: `/bin/sleep 5` with timeout 0.5 throws `.timedOut` within 2 s
-- [ ] **Step 2:** Run `swift test`. Expected: FAIL.
-- [ ] **Step 3: Implement.** `ProcessRunner` bridges `terminationHandler` into async with a checked continuation, and races a timeout task that calls `terminate()`.
-- [ ] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add CLI client with timeout"`
+- [x] **Step 2:** Run `swift test`. Expected: FAIL.
+- [x] **Step 3: Implement.** `ProcessRunner` bridges `terminationHandler` into async with a checked continuation, and races a timeout task that calls `terminate()`.
+- [x] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add CLI client with timeout"`
 
 ### Task 5: Error reports and notification planning
 
@@ -303,7 +303,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - While it stays active, post again when `now - lastErrorNotifiedAt >= 2 h`.
     - When it clears, reset both fields.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
   - `ErrorReportTests`: one per table row, plus `loggedInHint` and `nilWhenHealthy`.
   - `NotificationPlannerTests`, with a fixed UTC calendar and dates on 2026-10-01:
     - `checkinPostsOnceWhenDue` (09:01 posts `.checkin(stepsLeft: 4)`; 09:02 posts nothing)
@@ -313,9 +313,9 @@ The app never touches Things or the state database. It reads through `solve-it-g
     - `newChipNotifiedOnce` (body `"Home yellow done. Move a yellow chip."`)
     - `errorNotifiesOnStartAndEveryTwoHours` (t0 posts, +1h nothing, +2h posts, cleared resets)
     - `wakeAfterLongSleepPostsOneOfEach` (memory from yesterday 09:01, error active since 10 h ago with last notification 10 h ago, now 11:00 and due: exactly `[.checkin, .error]`, one each)
-- [ ] **Step 2:** Run `swift test`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add error reports and notification planning"`
+- [x] **Step 2:** Run `swift test`. Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4:** Run `swift test`. Expected: PASS. Commit: `git commit -m "Add error reports and notification planning"`
 
 ### Task 6: App shell, bundle and status icon
 
@@ -356,11 +356,11 @@ The app never touches Things or the state database. It reads through `solve-it-g
   3. Signs it with `codesign --force --options runtime --sign "<identity or ->"`.
   4. With `--install`, replaces `~/Applications/Solve It Grid.app` and runs `open` on it.
 
-- [ ] **Step 1:** Write `Info.plist` (keys per Global Constraints, `CFBundleShortVersionString` 0.1.0, `CFBundleVersion` 1) and `build-app.sh` (`set -euo pipefail`, executable bit set).
-- [ ] **Step 2:** Implement `main.swift`, `AppDelegate`, `AppModel` and `StatusIconRenderer`.
-- [ ] **Step 3:** Run `swift build && swift test`. Expected: both succeed, and all Core tests still pass.
-- [ ] **Step 4:** Run `scripts/build-app.sh` (no install). Expected: it prints the signing identity used (or `ad-hoc`), and `codesign --verify --verbose "build/Solve It Grid.app"` reports valid.
-- [ ] **Step 5: Commit**: `git commit -m "Add menu bar app shell, icon renderer and build script"`
+- [x] **Step 1:** Write `Info.plist` (keys per Global Constraints, `CFBundleShortVersionString` 0.1.0, `CFBundleVersion` 1) and `build-app.sh` (`set -euo pipefail`, executable bit set).
+- [x] **Step 2:** Implement `main.swift`, `AppDelegate`, `AppModel` and `StatusIconRenderer`.
+- [x] **Step 3:** Run `swift build && swift test`. Expected: both succeed, and all Core tests still pass.
+- [x] **Step 4:** Run `scripts/build-app.sh` (no install). Expected: it prints the signing identity used (or `ad-hoc`), and `codesign --verify --verbose "build/Solve It Grid.app"` reports valid.
+- [x] **Step 5: Commit**: `git commit -m "Add menu bar app shell, icon renderer and build script"`
 
 ### Task 7: Popover and history window
 
@@ -378,7 +378,7 @@ The app never touches Things or the state database. It reads through `solve-it-g
 - Consumes: `AppModel`, `chipBoard(for:)`, `errorReport`, `Copy`, `Status`.
 - Produces: `AppDelegate.showPopover()`, which Task 8's notification actions call.
 
-- [ ] **Step 1: Build the popover.** The layout follows the spec's popover block, top to bottom:
+- [x] **Step 1: Build the popover.** The layout follows the spec's popover block, top to bottom:
   1. The `ErrorBannerView`, only when `errorReport` is non-nil: title, detail, fix and "since", in red-tinted styling.
   2. A header with "This week's chips" and the week range (for example "Sep 28 to Oct 4", formatted from `week.start` and `week.end`).
   3. Four `PokerChipView`s from `chipBoard.slots`, each with the unit label and `state.caption`, followed by any leftover rows ("Move it now").
@@ -388,12 +388,12 @@ The app never touches Things or the state database. It reads through `solve-it-g
   7. The steps. Auto steps show a check or a circle. Manual steps show a clickable checkbox that calls `tick`. Each open step's links are buttons that `NSWorkspace.shared.open` the URL.
   8. "Snooze 1 hour" and "Done for today".
   9. A divider, then a footer with `Copy.streakLine`, `Copy.chipsEarnedLine` and "History".
-- [ ] **Step 2: Draw `PokerChipView(color:letter:state:size:)`** as in mockup D:
+- [x] **Step 2: Draw `PokerChipView(color:letter:state:size:)`** as in mockup D:
   - A solid disc with eight white edge inserts, a dashed inner ring and the letter (W, H or G).
   - `.open` is a dashed outline.
   - `.pending` is lifted with a shadow and bobs 4 pt over 2.6 s, unless `accessibilityReduceMotion` is on.
-- [ ] **Step 3: Build `HistoryView`.** It shows the current and best streak, then one row per `history` week: the start date, units done, hit or missed, and chips.
-- [ ] **Step 4:** Run `swift build && swift test`. Expected: success. Commit: `git commit -m "Add popover, poker chips and history window"`
+- [x] **Step 3: Build `HistoryView`.** It shows the current and best streak, then one row per `history` week: the start date, units done, hit or missed, and chips.
+- [x] **Step 4:** Run `swift build && swift test`. Expected: success. Commit: `git commit -m "Add popover, poker chips and history window"`
 
 ### Task 8: Notifications and login item
 
@@ -418,38 +418,61 @@ The app never touches Things or the state database. It reads through `solve-it-g
   - `SNOOZE` calls `model.snooze()`.
   - Notifications show while the app is frontmost (`willPresent` returns `[.banner, .sound]`).
 
-- [ ] **Step 1: Implement**, wiring `AppModel.onNotify` to `poster.post`. `requestAuthorization` and `LoginItem.registerIfNeeded` run in `applicationDidFinishLaunching`.
-- [ ] **Step 2:** Run `swift build && swift test`. Expected: success.
-- [ ] **Step 3: Commit**: `git commit -m "Add notifications with snooze and the login item"`
+- [x] **Step 1: Implement**, wiring `AppModel.onNotify` to `poster.post`. `requestAuthorization` and `LoginItem.registerIfNeeded` run in `applicationDidFinishLaunching`.
+- [x] **Step 2:** Run `swift build && swift test`. Expected: success.
+- [x] **Step 3: Commit**: `git commit -m "Add notifications with snooze and the login item"`
 
 ### Task 9: Live install and verification
 
 **Files:** none (the outcome is recorded in this plan).
 
-- [ ] **Step 1: GATE.** Ask: "OK to build and install Solve It Grid.app to ~/Applications and launch it? It will ask for notification permission and add itself as a login item." On yes, run `menubar/scripts/build-app.sh --install`.
-- [ ] **Step 2:** Ask the user to click Allow on the notification prompt and to set the app's notification style to Alerts (System Settings > Notifications > Solve It Grid). Confirm with them that `SMAppService` shows the login item (System Settings > General > Login Items).
-- [ ] **Step 3: GATE.** Ask before taking screenshots. Then verify:
+- [x] **Step 1: GATE.** Ask: "OK to build and install Solve It Grid.app to ~/Applications and launch it? It will ask for notification permission and add itself as a login item." On yes, run `menubar/scripts/build-app.sh --install`.
+- [x] **Step 2:** Ask the user to click Allow on the notification prompt and to set the app's notification style to Alerts (System Settings > Notifications > Solve It Grid). Confirm with them that `SMAppService` shows the login item (System Settings > General > Login Items).
+- [x] **Step 3: GATE.** Ask before taking screenshots. Then verify:
   - the ring matches `solve-it-grid status`
   - the popover shows the chips, the check-in steps and the footer
   - ticking a manual step persists (`solve-it-grid status` shows it done)
   - "History" opens the window
   - light and dark mode both render correctly
-- [ ] **Step 4:** Verify the error state without touching real data. Set the `cliPath` default to a nonexistent path (`defaults write com.github.timfurlong.solve-it-grid cliPath /nonexistent`) and relaunch. Expected: the triangle, a banner reading "solve-it-grid not found", and one error notification. Then `defaults delete com.github.timfurlong.solve-it-grid cliPath` and relaunch, and the ring returns.
-- [ ] **Step 5:** Record the outcome here, including whether the time-sensitive level took effect and which signing identity was used (by type only, never the name).
+- [x] **Step 4:** Verify the error state without touching real data. Set the `cliPath` default to a nonexistent path (`defaults write com.github.timfurlong.solve-it-grid cliPath /nonexistent`) and relaunch. Expected: the triangle, a banner reading "solve-it-grid not found", and one error notification. Then `defaults delete com.github.timfurlong.solve-it-grid cliPath` and relaunch, and the ring returns.
+- [x] **Step 5:** Record the outcome here, including whether the time-sensitive level took effect and which signing identity was used (by type only, never the name).
+
+  **Outcome (2026-09-29):**
+  - Built and signed with an Apple Development identity, installed to `~/Applications`, and listed under Open at Login.
+  - The ring matched `solve-it-grid status` (four open segments, orange check-in dot).
+  - With `cliPath` pointed at a missing file, the red triangle and the "solve-it-grid not found" banner showed. Restoring it brought the ring back.
+  - Screen capture filters out windows of menu-bar-only apps, so the popover and history window were checked with a new `--snapshot <dir> [--status <file>]` launch option that renders them to PNGs in light and dark mode. The layout matched the spec.
+  - Notifications arrived turned off (the permission prompt was not accepted). The notification settings offer no Time Sensitive option, so the time-sensitive level has no effect with local signing. The alert style is named Persistent on macOS 26.
+  - After the user turned notifications on: the check-in notification arrived, with Start check-in and Snooze 1 hour under the notification's Options menu (standard macOS placement for multiple actions). One error notification arrived for the missing CLI.
+  - A manual tick in the popover ("Colors look right") reached the CLI and showed as done in `solve-it-grid status`.
+  - Found during testing and handled afterwards: the popover shows a lighter background until it is clicked, and the app has no icon.
 
 ### Task 10: README and spec sync
 
 **Files:**
 - Modify: `README.md`, `docs/specs/2026-09-28-solve-it-grid-design.md`
 
-- [ ] **Step 1: README.** Add a "Menu bar app" section:
+- [x] **Step 1: README.** Add a "Menu bar app" section:
   - build and install (`menubar/scripts/build-app.sh --install`)
   - the notification permission and the Alerts style
   - the login item
   - what the ring and its center mean
   - where to set `cliPath`
-- [ ] **Step 2: Spec.** Diff the "Menu bar app" and "Repository" sections against what was built, and correct anything that's now wrong: the notification copy, the build script, and any Task 9 findings.
-- [ ] **Step 3: Public-readiness check.** Run `git grep -nIE "Apple Development: |\([A-Z0-9]{10}\)" -- menubar README.md`, which should return nothing. That covers signing identity names and team ids.
-- [ ] **Step 4: Commit**: `git commit -m "Document the menu bar app; sync spec"`
+- [x] **Step 2: Spec.** Diff the "Menu bar app" and "Repository" sections against what was built, and correct anything that's now wrong: the notification copy, the build script, and any Task 9 findings.
+- [x] **Step 3: Public-readiness check.** Run `git grep -nIE "Apple Development: |\([A-Z0-9]{10}\)" -- menubar README.md`, which should return nothing. That covers signing identity names and team ids.
+- [x] **Step 4: Commit**: `git commit -m "Document the menu bar app; sync spec"`
 
 This is the last phase in the spec, so there are no later phase plans to review.
+
+### Task 11: Follow-ups from live testing (added during execution)
+
+**Files:**
+- Create: `menubar/scripts/make-icon.swift`, `menubar/Bundle/AppIcon.icns`
+- Modify: `menubar/Bundle/Info.plist` (`CFBundleIconFile`), `menubar/scripts/build-app.sh` (copies the icon and refreshes Launch Services on install), `menubar/Sources/SolveItGrid/AppDelegate.swift`, `menubar/Sources/SolveItGrid/Views/PopoverView.swift`
+
+- [x] **Popover background:** `showPopover()` activates the app with `NSApp.activate(ignoringOtherApps: true)` and makes the popover window key. The popover content also sits on an `NSVisualEffectView` (material `.popover`, state `.active`). Without this, the popover drew its lighter inactive material until clicked.
+- [x] **App icon:** `make-icon.swift` draws a poker chip whose face is the Solve It Grid (red top-left, green top-right, yellow bottom-left, blue bottom-right, matching the grid's not-fun/fun columns) with white edge inserts, on a full-bleed dark background. Regenerate with `swift scripts/make-icon.swift /tmp/AppIcon.iconset && iconutil -c icns /tmp/AppIcon.iconset -o Bundle/AppIcon.icns`.
+- [x] **Ring orientation:** the ring draws clockwise from 6 o'clock so the yellows sit on the left and the greens on the right, matching the grid (not fun left, fun right).
+- [ ] **User check:** the popover opens dark on the first click (confirmed), and notifications show the new icon.
+- [x] **Final review fixes:** `RefreshGate` (core) coalesces a refresh requested mid-refresh into one more pass, so an ack or tick always shows. `activeNotificationIDs` (core) lets the app withdraw delivered notifications that no longer apply. `visibleLinks` caps per-item links at 5 plus "and N more". Every `NSLog` passes its text as an argument. `CLIClient.executable(cliPath:)` is pure, so tests no longer write preferences files.
+

@@ -209,7 +209,7 @@ An AppKit `NSStatusItem` with an `NSPopover` hosting SwiftUI views (`MenuBarExtr
 
 ### Icon: ring
 
-A 16-point ring split into four segments. The yellows sit on the right (work top-right, home bottom-right) and the greens on the left, matching the grid's not-fun and fun columns. A filled segment in the color means the unit is done, and a faint segment means it is open.
+A 16-point ring split into four segments. The yellows sit on the left (work bottom-left, home top-left) and the greens on the right, matching the grid's not-fun and fun columns. A filled segment in the color means the unit is done, and a faint segment means it is open.
 
 The center shows the single most important signal, in this priority order:
 
@@ -244,8 +244,9 @@ The center shows the single most important signal, in this priority order:
 - The four poker chips are drawn like the physical ones. An earned chip is solid ("In the jar"). A pending chip is solid, lifted and gently animated ("Move it now"). An open unit is a dashed outline ("Not yet"). Animation respects Reduce Motion.
 - The acknowledge button appears only while chips are pending and names them ("I moved the yellow chip", "I moved 2 chips"). It acknowledges every pending chip shown.
 - Steps with `"manual": true` render as a checkbox the user clicks, which runs `solve-it-grid checkin tick <id>`. Every other step ticks itself.
-- A pending chip belongs to the unit with the same `unit` id only when its `week_start` is the current week. A chip left over from last week shows as its own "Move it now" row.
+- A pending chip belongs to the unit with the same `unit` id only when its `week_start` is the current week. A chip left over from an earlier week shows as its own row ("Home yellow, week of Sep 28", "Move it now").
 - **History** opens a small window with the last 12 weeks (units filled, hit or miss, chips) plus the current and best streak.
+- `SolveItGrid --snapshot <dir> [--status <file.json>]` renders the popover and history window to PNGs in light and dark mode, for checking the layout without screen-recording permission.
 
 ### Notifications
 
@@ -255,7 +256,7 @@ The center shows the single most important signal, in this priority order:
 | Chip earned | when a new chip is awarded: "Chip earned", "Home yellow done. Move a yellow chip." | opens the popover |
 | Error | when the error state begins, then every 2 hours while it lasts: "Solve It Grid needs attention" and the error detail | opens the popover |
 
-Check-in notifications use the time-sensitive interruption level if the app can get that entitlement with local signing. Otherwise they are standard notifications, and setup instructs the user to set the app's notification style to Alerts so they stay on screen until handled.
+Check-in notifications request the time-sensitive interruption level, but a locally signed app can't hold that entitlement, so they arrive as standard notifications. The README has the user set the app's alert style to Persistent (called Alerts before macOS 26) so they stay on screen until handled. macOS puts the two check-in actions under the notification's Options menu.
 
 ### Error state
 

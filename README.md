@@ -50,6 +50,37 @@ solve-it-grid chip ack all      # after moving chips to the done jar
 solve-it-grid checkin done      # after the morning check-in
 ```
 
+## Menu bar app
+
+The menu bar app shows the week as a ring and runs the daily check-in. It only talks to the `solve-it-grid` CLI, so install that first.
+
+```bash
+menubar/scripts/build-app.sh --install
+```
+
+That builds `Solve It Grid.app`, signs it (with your Apple Development identity if you have one, otherwise ad-hoc), copies it to `~/Applications` and launches it. On first launch:
+
+- **Allow notifications.** If the prompt doesn't appear or gets dismissed, turn on Allow notifications in System Settings > Notifications > Solve It Grid. Set the alert style to **Persistent** (called Alerts before macOS 26) so the morning check-in stays on screen until you handle it.
+- The app adds itself to **Login Items** (System Settings > General > Login Items).
+
+**Reading the ring.** Four segments, one per unit: the yellows on the left (work bottom-left, home top-left) and the greens on the right, like the grid's not-fun and fun columns. A filled segment is done. The center shows what needs you, most important first:
+
+| Center | Meaning |
+|---|---|
+| orange dot | today's check-in is due |
+| pulsing colored dot | a chip is waiting to be moved |
+| checkmark | the week is hit |
+
+A red warning triangle replaces the ring when something is wrong (the CLI is missing, the categorizer keeps failing, or setup needs attention). Open the popover for what failed and how to fix it.
+
+**Checking the layout.** `"~/Applications/Solve It Grid.app/Contents/MacOS/SolveItGrid" --snapshot <dir>` renders the popover and history window, in light and dark mode, to PNGs and quits. Add `--status <file.json>` to render a saved status instead of the live one.
+
+**CLI location.** The app runs `~/.local/bin/solve-it-grid`. To point it elsewhere:
+
+```bash
+defaults write com.github.timfurlong.solve-it-grid cliPath /path/to/solve-it-grid
+```
+
 ## Commands
 
 | Command | What it does |
