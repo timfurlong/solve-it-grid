@@ -353,7 +353,7 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
   README.md, LICENSE (MIT)
   ```
 
-- Nothing personal is committed: real to-do titles, logs, the golden set, personal rubric examples, config and tokens all live in Application Support or the Keychain.
+- Nothing personal is committed: real to-do titles, logs, the golden set, personal rubric examples, and config all live in Application Support, and the Things token stays in the Things database.
 - Docs in the repo describe the final agreed state. Exploration material stays in the gitignored `docs/explorations/`.
 
 ## Delivery phases
