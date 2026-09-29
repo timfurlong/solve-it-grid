@@ -6,8 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from sig.classifier import Assignment, ClassifierError, ClaudeClassifier, validate
-from sig.prompt import WorkItem
+from solve_it_grid.classifier import Assignment, ClassifierError, ClaudeClassifier, validate
+from solve_it_grid.prompt import WorkItem
 
 
 def item(uuid="t1", needs_color=True, needs_area=False, kind="to-do"):

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Template rendered by `sig setup` into ~/Library/LaunchAgents. -->
+<!-- Template rendered by `solve-it-grid setup` into ~/Library/LaunchAgents. -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.github.timfurlong.solve-it-grid.categorize</string>
     <key>ProgramArguments</key>
     <array>
-        <string>__SIG__</string>
+        <string>__CLI__</string>
         <string>categorize</string>
     </array>
     <key>StartInterval</key>

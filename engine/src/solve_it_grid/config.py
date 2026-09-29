@@ -6,7 +6,7 @@ from datetime import date, time
 from pathlib import Path
 from typing import Literal, get_args
 
-from sig.paths import app_dir
+from solve_it_grid.paths import app_dir
 
 Color = Literal["red", "yellow", "green", "blue", "unscored"]
 COLORS: tuple[Color, ...] = get_args(Color)

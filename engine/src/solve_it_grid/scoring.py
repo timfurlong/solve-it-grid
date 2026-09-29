@@ -3,9 +3,9 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sig.config import Color, Config, Goal
-from sig.model import Todo, colors_of
-from sig.weeks import Week
+from solve_it_grid.config import Color, Config, Goal
+from solve_it_grid.model import Todo, colors_of
+from solve_it_grid.weeks import Week
 
 
 @dataclass(frozen=True)

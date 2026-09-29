@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `sig`, the Python engine that colors Things to-dos with Claude Haiku, scores the week's yellow and green goals, awards chips, tracks the daily check-in, and reports everything through `sig status`.
+**Goal:** Build `solve-it-grid`, the Python engine that colors Things to-dos with Claude Haiku, scores the week's yellow and green goals, awards chips, tracks the daily check-in, and reports everything through `solve-it-grid status`.
 
-**Architecture:** A uv-managed Python package in `engine/` with one module per responsibility. Pure functions do the scoring, check-in and validation work over an immutable `Snapshot` read from Things with things.py. Side effects are isolated in a few modules: the Things reader, the Things writer (URL scheme and AppleScript), the `claude` subprocess, and a SQLite state store. The CLI wires them together. A launchd agent runs `sig categorize` every 10 minutes.
+**Architecture:** A uv-managed Python package in `engine/` with one module per responsibility. Pure functions do the scoring, check-in and validation work over an immutable `Snapshot` read from Things with things.py. Side effects are isolated in a few modules: the Things reader, the Things writer (URL scheme and AppleScript), the `claude` subprocess, and a SQLite state store. The CLI wires them together. A launchd agent runs `solve-it-grid categorize` every 10 minutes.
 
 **Tech Stack:** Python 3.12+, uv, things.py, holidays, stdlib (sqlite3, tomllib, argparse, subprocess, fcntl), pytest, ruff.
 
@@ -12,10 +12,10 @@
 
 ## Global Constraints
 
-- Package `sig` lives in `engine/src/sig/`. The console script is `sig = "sig.cli:main"`. Install for real use with `uv tool install --editable ./engine`, so the package can find the repo's `rubric.md` and `config.example.toml`.
+- Package `solve_it_grid` lives in `engine/src/solve_it_grid/`. The console script is `solve-it-grid = "solve_it_grid.cli:main"`. Install for real use with `uv tool install --editable ./engine`, so the package can find the repo's `rubric.md` and `config.example.toml`.
 - Runtime dependencies: `things.py>=1.0.1` and `holidays>=0.50` only. Everything else comes from the stdlib.
-- All user data lives in `app_dir()`: `$SIG_HOME` when set (tests always set it to a tmp dir), otherwise `~/Library/Application Support/solve-it-grid/`. Nothing personal is ever written inside the repo.
-- Default tag names: `🔴 Red`, `🟡 Yellow`, `🟢 Green`, `🔵 Blue`, `⚪ Unscored`. Tags are compared after NFC normalization.
+- All user data lives in `app_dir()`: `$SOLVE_IT_GRID_HOME` when set (tests always set it to a tmp dir), otherwise `~/Library/Application Support/solve-it-grid/`. Nothing personal is ever written inside the repo.
+- Default tag names: `🔴`, `🟡`, `🟢`, `🔵`, `⚪`. Tags are compared after NFC normalization.
 - Units: `yellow-work`, `yellow-home`, `green-1`, `green-2`. A goal with target 1 has a unit id equal to the goal id. Otherwise the ids are `{goal_id}-{i}` for i = 1..target.
 - Week: Monday 00:00 to Sunday 23:59:59 local time. A completion belongs to the week containing its local `stop_date`.
 - A past week freezes when it has ended and every to-do completed in it has a color, or 48 hours after it ended.
@@ -43,7 +43,7 @@
 ## Review Focus
 
 1. **macOS privacy blocks the launchd process from reading Things' group container.** The categorizer must record a failed run whose message tells the user to grant Full Disk Access, not die silently. Tests in Task 2 and Task 10.
-2. **Area titles in `config.toml` don't match Things** (the emoji prefix is missing, or an area was renamed). The yellow goals would never count. `sig status` must report a setup error naming the missing area. Test in Task 7.
+2. **Area titles in `config.toml` don't match Things** (the emoji prefix is missing, or an area was renamed). The yellow goals would never count. `solve-it-grid status` must report a setup error naming the missing area. Test in Task 7.
 3. **A color tag is renamed or deleted in Things.** Counts would silently drop to zero. Status must report the missing tags. Tag matching must survive Unicode normalization differences. Tests in Task 2 and Task 7.
 4. **The model returns uuids that weren't asked about, duplicates, or omits items.** Only requested items are applied, the first answer wins, and omitted items are retried next run. Test in Task 9.
 5. **A completion syncs from the phone after its week froze.** The frozen result must not change, and no chip is awarded for it. Test in Task 5.
@@ -53,7 +53,7 @@
 ### Task 1: Package scaffold, paths and config
 
 **Files:**
-- Create: `engine/pyproject.toml`, `engine/src/sig/__init__.py`, `engine/src/sig/paths.py`, `engine/src/sig/config.py`, `config.example.toml`
+- Create: `engine/pyproject.toml`, `engine/src/solve_it_grid/__init__.py`, `engine/src/solve_it_grid/paths.py`, `engine/src/solve_it_grid/config.py`, `config.example.toml`
 - Test: `engine/tests/test_config.py`, `engine/tests/conftest.py`
 
 **Interfaces:**
@@ -74,7 +74,7 @@
   - Dependencies as in Global Constraints. Dev group: `pytest>=8` and `ruff`.
   - `[tool.pytest.ini_options]` with `addopts = "-m 'not live'"` and `markers = ["live: reads the real Things database"]`.
 
-  `conftest.py` has an autouse fixture that sets `SIG_HOME` to `tmp_path`.
+  `conftest.py` has an autouse fixture that sets `SOLVE_IT_GRID_HOME` to `tmp_path`.
 
 - [x] **Step 2: Write `config.example.toml` at the repo root**
 
@@ -95,7 +95,7 @@
   def test_loads_example_config():
       cfg = load_config(repo_root() / "config.example.toml")
       assert [g.id for g in cfg.goals] == ["yellow-work", "yellow-home", "green"]
-      assert cfg.tags["green"] == "🟢 Green"
+      assert cfg.tags["green"] == "🟢"
       assert cfg.checkin_time == time(9, 0)
       assert cfg.start_week is None and cfg.rubric_path is None
 
@@ -108,12 +108,12 @@
 - [x] **Step 4:** Run `uv run pytest tests/test_config.py -q`. Expected: FAIL (module missing).
 - [x] **Step 5: Implement `paths.py` and `config.py`** with `tomllib`. Empty strings map to `None`.
 - [x] **Step 6:** Run the tests. Expected: PASS. Also run `uv run ruff check`, which should be clean.
-- [x] **Step 7: Commit**: `git commit -m "Add sig package scaffold and config loading"`
+- [x] **Step 7: Commit**: `git commit -m "Add solve-it-grid package scaffold and config loading"`
 
 ### Task 2: Domain model and Things reader
 
 **Files:**
-- Create: `engine/src/sig/model.py`, `engine/src/sig/things_read.py`, `engine/tests/factories.py`
+- Create: `engine/src/solve_it_grid/model.py`, `engine/src/solve_it_grid/things_read.py`, `engine/tests/factories.py`
 - Test: `engine/tests/test_model.py`, `engine/tests/test_things_read.py`
 
 **Interfaces:**
@@ -157,7 +157,7 @@
 
   def test_own_area_wins_and_stop_date_parsed(): ...   # "2026-09-21 09:23:07" -> datetime(2026, 9, 21, 9, 23, 7)
   def test_missing_tags_key_means_no_tags(): ...       # records without "tags" -> tags == ()
-  def test_colors_of_matches_nfd_tag(): ...            # unicodedata.normalize("NFD", "🟢 Green") -> ["green"]
+  def test_colors_of_matches_nfd_tag(): ...            # unicodedata.normalize("NFD", "🟢") -> ["green"]
   def test_colors_of_multiple(): ...                   # two color tags plus "Errand" -> ["yellow", "green"]
   def test_read_snapshot_wraps_permission_error(monkeypatch):
       monkeypatch.setattr(things, "tasks", Mock(side_effect=PermissionError("Operation not permitted")))
@@ -180,14 +180,14 @@
   - `things.tasks(type="heading", status=None)`
   - `things.areas()`, `things.tags()`, `things.today()`, `things.inbox()`, `things.token()`
 
-  `Snapshot.projects` keeps only projects with status `incomplete`. `sqlite3.Error` and `PermissionError` are wrapped in `ThingsUnavailable`, and the message names the macOS setting: "grant Full Disk Access to the Python that runs sig".
+  `Snapshot.projects` keeps only projects with status `incomplete`. `sqlite3.Error` and `PermissionError` are wrapped in `ThingsUnavailable`, and the message names the macOS setting: "grant Full Disk Access to the Python that runs solve-it-grid".
 - [x] **Step 4:** Run the tests. Expected: PASS. Run once with `-m live`, which should also pass.
 - [x] **Step 5: Commit**: `git commit -m "Add domain model and Things reader"`
 
 ### Task 3: Weeks and scoring
 
 **Files:**
-- Create: `engine/src/sig/weeks.py`, `engine/src/sig/scoring.py`
+- Create: `engine/src/solve_it_grid/weeks.py`, `engine/src/solve_it_grid/scoring.py`
 - Test: `engine/tests/test_weeks.py`, `engine/tests/test_scoring.py`
 
 **Interfaces:**
@@ -232,7 +232,7 @@
 ### Task 4: State store
 
 **Files:**
-- Create: `engine/src/sig/state.py`
+- Create: `engine/src/solve_it_grid/state.py`
 - Test: `engine/tests/test_state.py`
 
 **Interfaces:**
@@ -263,7 +263,7 @@
 ### Task 5: Progress: chips, freezing, streaks
 
 **Files:**
-- Create: `engine/src/sig/progress.py`
+- Create: `engine/src/solve_it_grid/progress.py`
 - Test: `engine/tests/test_progress.py`
 
 **Interfaces:**
@@ -301,7 +301,7 @@
 ### Task 6: Daily check-in
 
 **Files:**
-- Create: `engine/src/sig/checkin.py`
+- Create: `engine/src/solve_it_grid/checkin.py`
 - Test: `engine/tests/test_checkin.py`
 
 **Interfaces:**
@@ -338,7 +338,7 @@
   def test_fix_step_for_empty_title_and_multi_color(): ...
   def test_someday_review_only_on_monday_and_tickable(): ...
   def test_tag_link_is_encoded():
-      assert show_url(query="🟢 Green") == "things:///show?query=%F0%9F%9F%A2%20Green"
+      assert show_url(query="🟢") == "things:///show?query=%F0%9F%9F%A2"
   ```
 
 - [x] **Step 2:** Run the tests. Expected: FAIL.
@@ -349,24 +349,24 @@
 ### Task 7: Status, health and the status CLI
 
 **Files:**
-- Create: `engine/src/sig/status.py`, `engine/src/sig/cli.py`
+- Create: `engine/src/solve_it_grid/status.py`, `engine/src/solve_it_grid/cli.py`
 - Test: `engine/tests/test_status.py`, `engine/tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `read_snapshot`, `ThingsUnavailable`, `refresh`, `scoring_cutoff`, `evaluate_checkin`, `StateStore`, `load_config`, `config_path`.
 - Produces:
   - `status.health_errors(snapshot, state, cfg, now) -> list[dict]`: each item is `{"source": str, "message": str, "since": str | None}`
-  - `status.build_status(snapshot, state, cfg, now) -> dict`: the exact JSON shape in the spec's `sig status` section
+  - `status.build_status(snapshot, state, cfg, now) -> dict`: the exact JSON shape in the spec's `solve-it-grid status` section
   - `status.render_text(status: dict) -> str`
   - `cli.main(argv: list[str] | None = None) -> int`, with subcommands `status [--json]`, `chip ack (ID... | all)`, `checkin done`, `checkin tick STEP`
 - Health errors, in this order, with this exact copy:
 
   | source | when | message |
   |---|---|---|
-  | `setup` | a configured tag is missing | `Missing Things tags: <names>. Run sig setup.` |
+  | `setup` | a configured tag is missing | `Missing Things tags: <names>. Run solve-it-grid setup.` |
   | `setup` | a configured area title is not in Things | `Things area '<title>' not found. Check [areas] in config.toml.` |
   | `setup` | no token | `Things URLs are off. Enable them in Things > Settings > General.` |
-  | `categorizer` | meta `review_applied_at` unset | `First review pending. Run sig categorize --dry-run, then sig categorize --apply-review.` |
+  | `categorizer` | meta `review_applied_at` unset | `First review pending. Run solve-it-grid categorize --dry-run, then solve-it-grid categorize --apply-review.` |
   | `categorizer` | failure streak ≥ `failure_threshold` | the last error, with `since` set to the first failure |
 
 - [x] **Step 1: Write failing tests**
@@ -389,17 +389,17 @@
 
 - [x] **Step 2:** Run the tests. Expected: FAIL.
 - [x] **Step 3: Implement.**
-  - `sig status` loads config from `config_path()`. If the file is missing, it prints `Run sig setup first.` and exits 2.
+  - `solve-it-grid status` loads config from `config_path()`. If the file is missing, it prints `Run solve-it-grid setup first.` and exits 2.
   - It opens `StateStore(app_dir() / "state.db")`, calls `read_snapshot(scoring_cutoff(...))`, then `build_status`.
   - The text rendering is plain, one line per unit, the pending chips, the check-in steps, and any health errors.
 - [x] **Step 4:** Run the tests. Expected: PASS.
-- [x] **Step 5: Commit**: `git commit -m "Add sig status, chip ack and check-in commands"`
+- [x] **Step 5: Commit**: `git commit -m "Add solve-it-grid status, chip ack and check-in commands"`
 
-### Task 8: Things writer and `sig setup`
+### Task 8: Things writer and `solve-it-grid setup`
 
 **Files:**
-- Create: `engine/src/sig/things_write.py`, `engine/src/sig/setup_cmd.py`, `launchd/com.github.timfurlong.solve-it-grid.categorize.plist`
-- Modify: `engine/src/sig/cli.py` (add `setup [--no-agent]`)
+- Create: `engine/src/solve_it_grid/things_write.py`, `engine/src/solve_it_grid/setup_cmd.py`, `launchd/com.github.timfurlong.solve-it-grid.categorize.plist`
+- Modify: `engine/src/solve_it_grid/cli.py` (add `setup [--no-agent]`)
 - Test: `engine/tests/test_things_write.py`, `engine/tests/test_setup.py`
 
 **Interfaces:**
@@ -411,8 +411,8 @@
     - project area: `url(uuid, command="update-project", **{"area-id": area_id})`
   - `things_write.ensure_tags(names: list[str], run=subprocess.run) -> list[str]`: runs one `osascript` that creates each missing tag, and returns the created names
   - `setup_cmd.run_setup(home: Path, repo: Path, now: datetime, *, ensure_tags_fn, install_agent: bool, run=subprocess.run) -> list[str]` (messages)
-- The plist template has placeholders `__SIG__`, `__HOME__` and `__LOGDIR__`.
-  - `ProgramArguments`: `[__SIG__, "categorize"]`
+- The plist template has placeholders `__CLI__`, `__HOME__` and `__LOGDIR__`.
+  - `ProgramArguments`: `[__CLI__, "categorize"]`
   - `StartInterval` 600, `RunAtLoad` true
   - stdout and stderr go to `__LOGDIR__/categorize.out.log` and `categorize.err.log`
   - `EnvironmentVariables.PATH`: `/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:__HOME__/.local/bin`
@@ -426,16 +426,16 @@
   - `test_setup_renders_plist_and_bootstraps`: the argv includes `launchctl bootstrap gui/<uid> <plist>`, preceded by a `bootout` whose failure is ignored.
   - `test_setup_no_agent_skips_launchctl`
 - [x] **Step 2:** Run the tests. Expected: FAIL.
-- [x] **Step 3: Implement.** `ThingsWriteError` wraps process errors with a token-free message. `sig setup` prints each message and ends by reporting the area check (configured titles vs. Things) and the token check.
-- [x] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add Things writer and sig setup"`
+- [x] **Step 3: Implement.** `ThingsWriteError` wraps process errors with a token-free message. `solve-it-grid setup` prints each message and ends by reporting the area check (configured titles vs. Things) and the token check.
+- [x] **Step 4:** Run the tests. Expected: PASS. Commit: `git commit -m "Add Things writer and solve-it-grid setup"`
 - [x] **Step 5: GATE. Live setup.**
-  1. Ask the user: "OK to run `sig setup --no-agent`? It creates the five color tags in Things and writes config.toml to Application Support."
-  2. On yes, run `uv tool install --editable ./engine`, then `sig setup --no-agent`.
+  1. Ask the user: "OK to run `solve-it-grid setup --no-agent`? It creates the five color tags in Things and writes config.toml to Application Support."
+  2. On yes, run `uv tool install --editable ./engine`, then `solve-it-grid setup --no-agent`.
   3. Edit `[areas]` in the real config to the user's actual area titles.
-  4. Confirm `sig status` reports no `setup` errors. Only the "First review pending" error should remain.
+  4. Confirm `solve-it-grid status` reports no `setup` errors. Only the "First review pending" error should remain.
 - [x] **Step 6: GATE. Verify URL-scheme writes on a completed to-do.** This settles the spec's open risk.
   1. Ask the user to name one to-do completed this week that may receive a color tag.
-  2. Call `UrlSchemeWriter().add_tag(uuid, "🟡 Yellow")` (or the color the user picks).
+  2. Call `UrlSchemeWriter().add_tag(uuid, "🟡")` (or the color the user picks).
   3. Wait 2 s, then re-read the item with `things.get(uuid)` and check the tag landed.
   4. **If it did not land:** add `AppleScriptWriter.add_tag`, which uses `tell application "Things3"` to append to `tag names` of `to do id`, and select it for completed to-dos in `UrlSchemeWriter.add_tag` via a `completed: bool` parameter. Add a unit test for the selection, re-verify live, and commit.
   5. Record the outcome in this plan under the step.
@@ -445,7 +445,7 @@
 ### Task 9: Rubric, prompt and classifier
 
 **Files:**
-- Create: `rubric.md`, `engine/src/sig/prompt.py`, `engine/src/sig/classifier.py`
+- Create: `rubric.md`, `engine/src/solve_it_grid/prompt.py`, `engine/src/solve_it_grid/classifier.py`
 - Test: `engine/tests/test_prompt.py`, `engine/tests/test_classifier.py`
 
 **Interfaces:**
@@ -506,8 +506,8 @@
 ### Task 10: Categorize orchestrator
 
 **Files:**
-- Create: `engine/src/sig/categorize.py`
-- Modify: `engine/src/sig/cli.py` (add `categorize`)
+- Create: `engine/src/solve_it_grid/categorize.py`
+- Modify: `engine/src/solve_it_grid/cli.py` (add `categorize`)
 - Test: `engine/tests/test_categorize.py`
 
 **Interfaces:**
@@ -530,7 +530,7 @@
   def test_select_work_scope(): ...              # one case per rule above, incl. inbox color-only and project area-only
   def test_no_work_skips_claude_and_records_ok(): ...
   def test_batches_by_batch_size(): ...          # 60 items -> classify called with 25, 25, 10
-  def test_applies_tag_and_area_names(): ...     # green + work -> add_tag(uuid, "🟢 Green"), set_todo_area(uuid, "A-W")
+  def test_applies_tag_and_area_names(): ...     # green + work -> add_tag(uuid, "🟢"), set_todo_area(uuid, "A-W")
   def test_classifier_error_records_failed_run_and_writes_nothing(): ...
   def test_things_unavailable_records_failed_run_with_fda_hint(): ...
   def test_write_error_skips_item_and_continues(): ...
@@ -544,15 +544,15 @@
 - [x] **Step 3: Implement.**
   - `run_categorize` reads with `completed_since = week_of(today).prev().start`, selects the work, classifies in batches, validates, and applies. It then waits `sleep(2)`, re-reads, fills `unverified`, logs, and records the run.
   - Any `ClassifierError` or `ThingsUnavailable` records `ok=False` and re-raises.
-  - CLI `sig categorize` prints `requested N, applied N, skipped N, unverified N`. It exits 0 on `AlreadyRunning` and `NotReviewed` (printing why) and exits 1 on a recorded failure.
+  - CLI `solve-it-grid categorize` prints `requested N, applied N, skipped N, unverified N`. It exits 0 on `AlreadyRunning` and `NotReviewed` (printing why) and exits 1 on a recorded failure.
 - [x] **Step 4:** Run the tests. Expected: PASS.
 - [x] **Step 5: Commit**: `git commit -m "Add categorize orchestrator"`
 
 ### Task 11: First-run review, golden set and eval
 
 **Files:**
-- Create: `engine/src/sig/review.py`
-- Modify: `engine/src/sig/cli.py` (add `categorize --dry-run`, `categorize --apply-review [PATH]`, `eval`)
+- Create: `engine/src/solve_it_grid/review.py`
+- Modify: `engine/src/solve_it_grid/cli.py` (add `categorize --dry-run`, `categorize --apply-review [PATH]`, `eval`)
 - Test: `engine/tests/test_review.py`
 
 **Interfaces:**
@@ -585,7 +585,7 @@ The first dry run was reviewed in Notion. These changes came out of it and were 
 - [x] **Classifier model:** `sonnet` alias in `config.example.toml`, with extended thinking off in `ClaudeClassifier` (`MAX_THINKING_TOKENS=0`). Test: `test_thinking_disabled_for_speed`.
 - [x] **Real list names:** `model.list_name(todo, today)` returns Inbox, Today, Anytime, Upcoming or Someday (Upcoming = Someday with a future start date). The prompt payload carries `list` and `scheduled` instead of `start`. `work_item_from_todo` takes `today`. Tests: `test_list_name_*`, `test_todo_payload_and_notes_trimmed_to_300`.
 - [x] **No blue from the classifier:** `prompt.CLASSIFIER_COLORS = ("red", "yellow", "green", "unscored")` drives the schema enum and `validate`. Test: `test_validate_rejects_blue`.
-- [x] **Check-in affirmations:** manual steps `today-reviewed` ("Today's list is reviewed") and `colors-reviewed` ("Colors look right") after the color steps. `checkin.MANUAL_STEPS` is the single list `sig checkin tick` accepts. Tests: `test_review_affirmations_are_manual_ticks`, `test_cli_checkin_tick_accepts_review_affirmations`.
+- [x] **Check-in affirmations:** manual steps `today-reviewed` ("Today's list is reviewed") and `colors-reviewed` ("Colors look right") after the color steps. `checkin.MANUAL_STEPS` is the single list `solve-it-grid checkin tick` accepts. Tests: `test_review_affirmations_are_manual_ticks`, `test_cli_checkin_tick_accepts_review_affirmations`.
 - [x] **Rubric:** green is active fun; interesting work is yellow; red includes Upcoming dates within about three days with outside consequences. Spec and README updated to match.
 - [x] **Re-run the dry run with Sonnet** and layer the user's Notion corrections on top (`review.corrections.json` in Application Support), then show the user only the differences. Outcome: Sonnet matched 12 of 13 corrections; 3 other colors changed and were approved.
 - [x] **Verification backoff:** `categorize.verify_writes` re-reads after 2, 4 and 8 s. A fixed 2 s check flagged 3 of 48 real writes that landed moments later. Tests: `test_verification_retries_while_things_catches_up`, `test_verification_gives_up_after_retries`.
@@ -594,16 +594,16 @@ The first dry run was reviewed in Notion. These changes came out of it and were 
 
 **Files:** none in the repo (records the outcome in this plan).
 
-- [x] **Step 1:** Run `sig categorize --dry-run`, which only reads. Show the user the table from `review.tsv`, grouped by color.
+- [x] **Step 1:** Run `solve-it-grid categorize --dry-run`, which only reads. Show the user the table from `review.tsv`, grouped by color.
 - [x] **Step 2:** Collect the user's corrections in chat and edit `review.tsv` to match. Read the file back to the user.
-- [x] **Step 3: GATE.** Ask "OK to write these colors and areas to Things?" On yes, run `sig categorize --apply-review`, then `sig status`. Confirm there are no health errors and that the colored counts match Things.
-- [x] **Step 4: GATE.** Ask "OK to install the launchd agent (runs every 10 minutes)?" On yes, run `sig setup` (with the agent) and then `launchctl kickstart -k gui/$(id -u)/com.github.timfurlong.solve-it-grid.categorize`.
-- [x] **Step 5:** Check `categorize.err.log` and `sig status`.
+- [x] **Step 3: GATE.** Ask "OK to write these colors and areas to Things?" On yes, run `solve-it-grid categorize --apply-review`, then `solve-it-grid status`. Confirm there are no health errors and that the colored counts match Things.
+- [x] **Step 4: GATE.** Ask "OK to install the launchd agent (runs every 10 minutes)?" On yes, run `solve-it-grid setup` (with the agent) and then `launchctl kickstart -k gui/$(id -u)/com.github.timfurlong.solve-it-grid.categorize`.
+- [x] **Step 5:** Check `categorize.err.log` and `solve-it-grid status`.
   - If the error mentions Full Disk Access or "Operation not permitted", tell the user to add the resolved Python binary (`readlink -f ~/.local/share/uv/tools/solve-it-grid/bin/python`) under System Settings > Privacy & Security > Full Disk Access, then kickstart again.
   - Done means one successful scheduled run is recorded (`requested 0, applied 0` is fine).
-- [x] **Step 6:** Run `sig eval` and record the baseline agreement in this plan.
+- [x] **Step 6:** Run `solve-it-grid eval` and record the baseline agreement in this plan.
 
-  **Outcome (2026-09-29):** 48 colors and 4 areas written, confirmed in Things. The launchd agent's first scheduled run succeeded without Full Disk Access. `sig eval` baseline: 47/49 (95%). Both misses were completed incidents judged as of today, so `rubric.md` gained a rule to judge completed to-dos as of when the work happened, giving 48/49 (97%). The remaining miss (a completed investigation the user rated yellow for low priority) needs priority context the model doesn't have.
+  **Outcome (2026-09-29):** 48 colors and 4 areas written, confirmed in Things. The launchd agent's first scheduled run succeeded without Full Disk Access. `solve-it-grid eval` baseline: 47/49 (95%). Both misses were completed incidents judged as of today, so `rubric.md` gained a rule to judge completed to-dos as of when the work happened, giving 48/49 (97%). The remaining miss (a completed investigation the user rated yellow for low priority) needs priority context the model doesn't have.
 
 ### Task 13: `/things` skill coloring
 
@@ -628,9 +628,9 @@ The first dry run was reviewed in Notion. These changes came out of it and were 
   1. What it is (credit and link the Solve It Grid page)
   2. How it works (4 bullets)
   3. Requirements: macOS, Things 3 with Things URLs enabled, Claude Code CLI logged in, uv
-  4. Install (`uv tool install --editable ./engine`, then `sig setup`)
+  4. Install (`uv tool install --editable ./engine`, then `solve-it-grid setup`)
   5. First review (dry run, then apply)
-  6. Daily use (`sig status`, `sig chip ack`, `sig checkin done`)
+  6. Daily use (`solve-it-grid status`, `solve-it-grid chip ack`, `solve-it-grid checkin done`)
   7. Commands
   8. Privacy: to-do titles and notes are sent to Claude for classification, and all state stays in Application Support
   9. Full Disk Access note
@@ -646,7 +646,7 @@ The first dry run was reviewed in Notion. These changes came out of it and were 
 **Files:**
 - Modify: `docs/specs/2026-09-28-solve-it-grid-design.md` (menu bar sections), if needed
 
-- [x] **Step 1:** Run `sig status --json` against real data and compare it key by key with the spec's `sig status` contract and the menu bar sections (icon states, popover rows, error state triggers). Fix any mismatch in the spec so the phase 2 plan can be written from it directly.
-- [x] **Step 2:** List for the user anything phase 1 learned that changes phase 2 (for example, how long status takes to run, since the app polls every 60 s). Commit any spec edits: `git commit -m "Sync spec menu bar contract with sig status"`
+- [x] **Step 1:** Run `solve-it-grid status --json` against real data and compare it key by key with the spec's `solve-it-grid status` contract and the menu bar sections (icon states, popover rows, error state triggers). Fix any mismatch in the spec so the phase 2 plan can be written from it directly.
+- [x] **Step 2:** List for the user anything phase 1 learned that changes phase 2 (for example, how long status takes to run, since the app polls every 60 s). Commit any spec edits: `git commit -m "Sync spec menu bar contract with solve-it-grid status"`
 
-  **Outcome (2026-09-29):** `sig status --json` against real data runs in about 0.2 s, so 60 s polling is cheap. The contract gained `manual` on each check-in step (the app renders manual steps as checkboxes) and `week_start` on each pending chip (so a leftover chip from last week isn't matched to this week's unit). The spec's popover now shows the two review affirmations.
+  **Outcome (2026-09-29):** `solve-it-grid status --json` against real data runs in about 0.2 s, so 60 s polling is cheap. The contract gained `manual` on each check-in step (the app renders manual steps as checkboxes) and `week_start` on each pending chip (so a leftover chip from last week isn't matched to this week's unit). The spec's popover now shows the two review affirmations.

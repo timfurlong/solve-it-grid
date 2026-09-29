@@ -2,14 +2,14 @@ from datetime import time
 
 import pytest
 
-from sig.config import load_config
-from sig.paths import app_dir, repo_root
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import app_dir, repo_root
 
 
 def test_loads_example_config():
     cfg = load_config(repo_root() / "config.example.toml")
     assert [g.id for g in cfg.goals] == ["yellow-work", "yellow-home", "green"]
-    assert cfg.tags["green"] == "🟢 Green"
+    assert cfg.tags == {"red": "🔴", "yellow": "🟡", "green": "🟢", "blue": "🔵", "unscored": "⚪"}
     assert cfg.checkin_time == time(9, 0)
     assert cfg.start_week is None and cfg.rubric_path is None
     assert cfg.claude_path is None

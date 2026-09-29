@@ -5,7 +5,7 @@ import pytest
 from factories import project, snapshot, todo
 from fakes import FakeClassifier, FakeThings, LaggyThings
 
-from sig.categorize import (
+from solve_it_grid.categorize import (
     AlreadyRunning,
     NotReviewed,
     SetupIncomplete,
@@ -13,15 +13,15 @@ from sig.categorize import (
     run_lock,
     select_work,
 )
-from sig.classifier import ClassifierError
-from sig.config import load_config
-from sig.paths import repo_root
-from sig.state import StateStore
-from sig.things_read import ThingsUnavailable
+from solve_it_grid.classifier import ClassifierError
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
+from solve_it_grid.state import StateStore
+from solve_it_grid.things_read import ThingsUnavailable
 
 NOW = datetime(2026, 10, 1, 10, 0).astimezone()
 TODAY = NOW.date()
-Y = "🟡 Yellow"
+Y = "🟡"
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ def test_batches_by_batch_size(cfg, state, tmp_path):
 def test_applies_tag_and_area_names(cfg, state, tmp_path):
     things = FakeThings([todo(uuid="t1")], projects=[project(uuid="p1")])
     result = run(things, FakeClassifier("green", "work"), state, cfg, tmp_path)
-    assert ("add_tag", "t1", "🟢 Green") in things.calls
+    assert ("add_tag", "t1", "🟢") in things.calls
     assert ("set_todo_area", "t1", "A-W") in things.calls
     assert ("set_project_area", "p1", "A-W") in things.calls
     assert [a.uuid for a in result.applied] == ["t1", "p1"] and result.unverified == []
@@ -196,7 +196,7 @@ def test_area_left_unsure_is_not_asked_again_for_a_day(cfg, state, tmp_path):
 
 def test_setup_problem_stops_categorizing(cfg, state, tmp_path):
     things = FakeThings([todo(uuid="t1", area_id="A-W")])
-    snap_without_green = snapshot(things.todos.values(), tag_names=frozenset({"🔴 Red", "🟡 Yellow"}))
+    snap_without_green = snapshot(things.todos.values(), tag_names=frozenset({"🔴", "🟡"}))
     clf = FakeClassifier()
     with pytest.raises(SetupIncomplete, match="Missing Things tags"):
         run_categorize(read=lambda since: snap_without_green, writer=things, classifier=clf, state=state,

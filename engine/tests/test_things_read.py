@@ -4,8 +4,8 @@ from unittest.mock import Mock
 import pytest
 import things
 
-from sig import things_read
-from sig.things_read import ThingsUnavailable, read_snapshot, to_todo
+from solve_it_grid import things_read
+from solve_it_grid.things_read import ThingsUnavailable, read_snapshot, to_todo
 
 
 def _rec(**kw):
@@ -49,7 +49,7 @@ def test_missing_tags_key_means_no_tags():
 def test_read_snapshot_assembles_from_things_api(monkeypatch):
     def tasks(type, status, **kw):
         if type == "to-do" and status == "incomplete":
-            return [_rec(uuid="open1", area="A-W", tags=["🟡 Yellow"])]
+            return [_rec(uuid="open1", area="A-W", tags=["🟡"])]
         if type == "to-do" and status == "completed":
             assert kw == {"stop_date": ">=2026-09-21"}
             return [_rec(uuid="done1", status="completed", stop_date="2026-09-22 10:00:00")]
@@ -62,16 +62,16 @@ def test_read_snapshot_assembles_from_things_api(monkeypatch):
 
     monkeypatch.setattr(things, "tasks", tasks)
     monkeypatch.setattr(things, "areas", lambda: [{"uuid": "A-W", "title": "Work"}])
-    monkeypatch.setattr(things, "tags", lambda: [{"title": "🟡 Yellow"}])
+    monkeypatch.setattr(things, "tags", lambda: [{"title": "🟡"}])
     monkeypatch.setattr(things, "today", lambda: [{"uuid": "open1"}])
     monkeypatch.setattr(things, "inbox", lambda: [{"uuid": "i1"}, {"uuid": "i2"}])
     monkeypatch.setattr(things, "token", lambda: "tok")
     s = read_snapshot(date(2026, 9, 21))
     assert [t.uuid for t in s.todos] == ["open1", "done1"]
-    assert s.todos[0].in_today and s.todos[0].tags == ("🟡 Yellow",)
+    assert s.todos[0].in_today and s.todos[0].tags == ("🟡",)
     assert [p.uuid for p in s.projects] == ["P1"]
     assert s.area_ids == {"Work": "A-W"}
-    assert s.tag_names == frozenset({"🟡 Yellow"})
+    assert s.tag_names == frozenset({"🟡"})
     assert (s.inbox_count, s.token_present) == (2, True)
 
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 
-from sig.categorize import (
+from solve_it_grid.categorize import (
     REVIEW_META,
     CategorizeResult,
     apply_assignments,
@@ -17,12 +17,12 @@ from sig.categorize import (
     verify_writes,
     window_start,
 )
-from sig.classifier import AREAS, Assignment, validate
-from sig.config import COLORS, Config
-from sig.model import Snapshot
-from sig.prompt import WorkItem
-from sig.state import StateStore
-from sig.things_write import ThingsWriter
+from solve_it_grid.classifier import AREAS, Assignment, validate
+from solve_it_grid.config import COLORS, Config
+from solve_it_grid.model import Snapshot
+from solve_it_grid.prompt import WorkItem
+from solve_it_grid.state import StateStore
+from solve_it_grid.things_write import ThingsWriter
 
 HEADER = ["uuid", "kind", "needs", "title", "color", "area", "reason"]
 ITEMS_FILE = "review.items.jsonl"

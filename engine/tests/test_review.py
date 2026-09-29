@@ -5,13 +5,13 @@ import pytest
 from factories import todo
 from fakes import FakeClassifier, FakeThings
 
-from sig.config import load_config
-from sig.paths import repo_root
-from sig.review import apply_review, dry_run, read_review, render_eval, run_eval
-from sig.state import StateStore
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
+from solve_it_grid.review import apply_review, dry_run, read_review, render_eval, run_eval
+from solve_it_grid.state import StateStore
 
 NOW = datetime(2026, 10, 1, 10, 0).astimezone()
-Y = "🟡 Yellow"
+Y = "🟡"
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_apply_review_uses_edited_color(cfg, state, tmp_path):
     path, _, _ = _dry(things, cfg, tmp_path)
     path.write_text(path.read_text().replace("\tyellow\t", "\tgreen\t"))
     result = _apply(things, state, cfg, tmp_path)
-    assert things.calls == [("add_tag", "t1", "🟢 Green")]
+    assert things.calls == [("add_tag", "t1", "🟢")]
     assert [a.color for a in result.applied] == ["green"] and result.unverified == []
 
 

@@ -1,4 +1,4 @@
-"""`sig` command line."""
+"""`solve-it-grid` command line."""
 
 import argparse
 import json
@@ -6,21 +6,26 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from sig.categorize import AlreadyRunning, NotReviewed, SetupIncomplete, run_categorize, run_lock
-from sig.checkin import MANUAL_STEPS
-from sig.classifier import ClassifierError, ClaudeClassifier
-from sig.config import Config, config_path, load_config
-from sig.paths import app_dir, repo_root
-from sig.progress import scoring_cutoff
-from sig.prompt import build_system_prompt
-from sig.review import apply_review, dry_run, render_eval, run_eval
-from sig.setup_cmd import run_setup
-from sig.state import StateStore
-from sig.status import build_status, health_errors, render_text
-from sig.things_read import ThingsUnavailable, read_snapshot
-from sig.things_write import UrlSchemeWriter, ensure_tags
-
-REVIEW_PENDING = "First review pending. Run sig categorize --dry-run, then sig categorize --apply-review."
+from solve_it_grid.categorize import (
+    REVIEW_PENDING,
+    AlreadyRunning,
+    NotReviewed,
+    SetupIncomplete,
+    run_categorize,
+    run_lock,
+)
+from solve_it_grid.checkin import MANUAL_STEPS
+from solve_it_grid.classifier import ClassifierError, ClaudeClassifier
+from solve_it_grid.config import Config, config_path, load_config
+from solve_it_grid.paths import app_dir, repo_root
+from solve_it_grid.progress import scoring_cutoff
+from solve_it_grid.prompt import build_system_prompt
+from solve_it_grid.review import apply_review, dry_run, render_eval, run_eval
+from solve_it_grid.setup_cmd import run_setup
+from solve_it_grid.state import StateStore
+from solve_it_grid.status import build_status, health_errors, render_text
+from solve_it_grid.things_read import ThingsUnavailable, read_snapshot
+from solve_it_grid.things_write import UrlSchemeWriter, ensure_tags
 
 
 def _now() -> datetime:
@@ -30,7 +35,7 @@ def _now() -> datetime:
 def _load() -> tuple[Config, StateStore] | None:
     path = config_path()
     if not path.exists():
-        print("Run sig setup first.", file=sys.stderr)
+        print("Run solve-it-grid setup first.", file=sys.stderr)
         return None
     return load_config(path), StateStore(app_dir() / "state.db")
 
@@ -92,7 +97,7 @@ def _cmd_dry_run(cfg: Config, home) -> int:
     for uuid, reason in skipped:
         print(f"  skipped {uuid}: {reason}")
     print(f"\n{len(assignments)} proposals written to {path}. Edit the color and area columns, "
-          "then run: sig categorize --apply-review")
+          "then run: solve-it-grid categorize --apply-review")
     return 0
 
 
@@ -114,7 +119,8 @@ def _cmd_eval(args, cfg: Config, state: StateStore) -> int:
     home = app_dir()
     golden = home / "golden.jsonl"
     if not golden.exists():
-        print("No golden set yet. Run sig categorize --dry-run and --apply-review first.", file=sys.stderr)
+        print("No golden set yet. Run solve-it-grid categorize --dry-run and --apply-review first.",
+              file=sys.stderr)
         return 2
     try:
         report = run_eval(_classifier(cfg, home), golden, cfg.batch_size)
@@ -173,7 +179,7 @@ def _cmd_checkin(args, cfg: Config, state: StateStore) -> int:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="sig", description="Solve It Grid for Things")
+    parser = argparse.ArgumentParser(prog="solve-it-grid", description="Solve It Grid for Things")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     setup = sub.add_parser("setup", help="write config, create color tags, install the launchd agent")

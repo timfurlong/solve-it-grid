@@ -1,14 +1,14 @@
-"""Assemble the `sig status` report and its health checks."""
+"""Assemble the `solve-it-grid status` report and its health checks."""
 
 from datetime import datetime, timedelta
 
-from sig.categorize import REVIEW_META, RUN_KIND
-from sig.checkin import MANUAL_STEPS, evaluate_checkin
-from sig.config import Config
-from sig.model import Snapshot
-from sig.progress import refresh
-from sig.setup_check import setup_problems
-from sig.state import StateStore
+from solve_it_grid.categorize import REVIEW_META, REVIEW_PENDING, RUN_KIND
+from solve_it_grid.checkin import MANUAL_STEPS, evaluate_checkin
+from solve_it_grid.config import Config
+from solve_it_grid.model import Snapshot
+from solve_it_grid.progress import refresh
+from solve_it_grid.setup_check import setup_problems
+from solve_it_grid.state import StateStore
 
 
 def _error(source: str, message: str, since: str | None = None) -> dict:
@@ -18,9 +18,7 @@ def _error(source: str, message: str, since: str | None = None) -> dict:
 def health_errors(snapshot: Snapshot, state: StateStore, cfg: Config, now: datetime) -> list[dict]:
     errors = [_error("setup", problem) for problem in setup_problems(snapshot, cfg)]
     if state.get_meta(REVIEW_META) is None:
-        errors.append(_error(
-            "categorizer",
-            "First review pending. Run sig categorize --dry-run, then sig categorize --apply-review."))
+        errors.append(_error("categorizer", REVIEW_PENDING))
     count, since, last_error = state.failure_streak(RUN_KIND)
     if count >= cfg.failure_threshold:
         errors.append(_error("categorizer", last_error or "Categorizer failing",
@@ -69,7 +67,7 @@ def render_text(status: dict) -> str:
     lines.append(f"  Reds finished: {status['red_done']} (not scored)")
     for chip in status["chips"]["pending"]:
         lines.append(f"Move a {chip['color']} chip ({labels.get(chip['unit'], chip['unit'])}). "
-                     f"Then run: sig chip ack {chip['id']}")
+                     f"Then run: solve-it-grid chip ack {chip['id']}")
     checkin = status["checkin"]
     state = "done" if checkin["done"] else ("due" if checkin["due"] else "not due")
     lines.append(f"Check-in ({state}):")

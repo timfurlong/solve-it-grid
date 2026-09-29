@@ -8,8 +8,8 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-from sig.config import Color
-from sig.prompt import CLASSIFIER_COLORS, OUTPUT_SCHEMA, WorkItem, build_user_message
+from solve_it_grid.config import Color
+from solve_it_grid.prompt import CLASSIFIER_COLORS, OUTPUT_SCHEMA, WorkItem, build_user_message
 
 AREAS = ("work", "home")
 # Extended thinking makes a 10-item batch take ~55 s instead of ~10 s, with no need for it here.

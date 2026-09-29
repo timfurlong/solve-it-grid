@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from sig.state import FrozenWeek, StateStore
+from solve_it_grid.state import FrozenWeek, StateStore
 
 NOW = datetime(2026, 10, 1, 10, 0).astimezone()
 WK = date(2026, 9, 28)

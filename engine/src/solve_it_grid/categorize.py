@@ -9,18 +9,20 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from sig.classifier import Assignment, ClassifierError, validate
-from sig.config import Config
-from sig.model import Snapshot, colors_of
-from sig.prompt import WorkItem, work_item_from_project, work_item_from_todo
-from sig.setup_check import setup_problems
-from sig.state import StateStore
-from sig.things_read import ThingsUnavailable
-from sig.things_write import ThingsWriteError, ThingsWriter
-from sig.weeks import week_of
+from solve_it_grid.classifier import Assignment, ClassifierError, validate
+from solve_it_grid.config import Config
+from solve_it_grid.model import Snapshot, colors_of
+from solve_it_grid.prompt import WorkItem, work_item_from_project, work_item_from_todo
+from solve_it_grid.setup_check import setup_problems
+from solve_it_grid.state import StateStore
+from solve_it_grid.things_read import ThingsUnavailable
+from solve_it_grid.things_write import ThingsWriteError, ThingsWriter
+from solve_it_grid.weeks import week_of
 
 RUN_KIND = "categorize"
 REVIEW_META = "review_applied_at"
+REVIEW_PENDING = ("First review pending. Run solve-it-grid categorize --dry-run, "
+                  "then solve-it-grid categorize --apply-review.")
 # Things applies URL-scheme writes asynchronously; a big batch can take several seconds to land.
 VERIFY_DELAYS_SECONDS = (2, 4, 8)
 # An item the model couldn't place (area unsure) is not asked about again for this long.

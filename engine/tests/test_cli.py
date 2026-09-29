@@ -5,10 +5,10 @@ from datetime import date, datetime
 import pytest
 from factories import snapshot
 
-from sig import cli
-from sig.paths import app_dir, repo_root
-from sig.state import StateStore
-from sig.things_read import ThingsUnavailable
+from solve_it_grid import cli
+from solve_it_grid.paths import app_dir, repo_root
+from solve_it_grid.state import StateStore
+from solve_it_grid.things_read import ThingsUnavailable
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def configured():
 
 def test_cli_requires_setup(capsys):
     assert cli.main(["status"]) == 2
-    assert "Run sig setup first." in capsys.readouterr().err
+    assert "Run solve-it-grid setup first." in capsys.readouterr().err
 
 
 def test_cli_status_json(configured, monkeypatch, capsys):

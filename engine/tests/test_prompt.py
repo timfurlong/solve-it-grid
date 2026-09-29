@@ -3,7 +3,7 @@ from datetime import date
 
 from factories import project, todo
 
-from sig.prompt import (
+from solve_it_grid.prompt import (
     OUTPUT_SCHEMA,
     build_system_prompt,
     build_user_message,

@@ -1,22 +1,22 @@
-# Solve It Grid configuration. `sig setup` copies this file to
+# Solve It Grid configuration. `solve-it-grid setup` copies this file to
 # ~/Library/Application Support/solve-it-grid/config.toml and fills in the blanks.
 
-# Monday of the first tracked week (YYYY-MM-DD). Set by `sig setup`; earlier weeks are ignored.
+# Monday of the first tracked week (YYYY-MM-DD). Set by `solve-it-grid setup`; earlier weeks are ignored.
 start_week = ""
 
 [paths]
-# Absolute path to this repo's rubric.md. Set by `sig setup`.
+# Absolute path to this repo's rubric.md. Set by `solve-it-grid setup`.
 rubric = ""
-# Absolute path to the Claude Code CLI. Set by `sig setup`.
+# Absolute path to the Claude Code CLI. Set by `solve-it-grid setup`.
 claude = ""
 
 [tags]
-# Things tag names for each grid color. `sig setup` creates any that are missing.
-red = "🔴 Red"
-yellow = "🟡 Yellow"
-green = "🟢 Green"
-blue = "🔵 Blue"
-unscored = "⚪ Unscored"
+# Things tag names for each grid color. `solve-it-grid setup` creates any that are missing.
+red = "🔴"
+yellow = "🟡"
+green = "🟢"
+blue = "🔵"
+unscored = "⚪"
 
 [areas]
 # Title of the Things area used for work to-dos (include any emoji exactly as in Things).

@@ -2,9 +2,9 @@
 
 from dataclasses import replace
 
-from sig.model import Project, Snapshot, Todo
+from solve_it_grid.model import Project, Snapshot, Todo
 
-DEFAULT_TAGS = frozenset({"🔴 Red", "🟡 Yellow", "🟢 Green", "🔵 Blue", "⚪ Unscored"})
+DEFAULT_TAGS = frozenset({"🔴", "🟡", "🟢", "🔵", "⚪"})
 _BASE_TODO = Todo(
     uuid="t1", title="Task", notes="", status="incomplete", start="Anytime", start_date=None,
     deadline=None, stop=None, area_id=None, project_id=None, project_title=None,

@@ -4,8 +4,8 @@ from dataclasses import replace
 
 from factories import snapshot
 
-from sig.classifier import ClassifierError
-from sig.things_write import ThingsWriteError
+from solve_it_grid.classifier import ClassifierError
+from solve_it_grid.things_write import ThingsWriteError
 
 
 class FakeThings:

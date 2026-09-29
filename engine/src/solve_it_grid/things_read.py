@@ -5,10 +5,10 @@ from datetime import date, datetime
 
 import things
 
-from sig.model import Project, Snapshot, Todo
+from solve_it_grid.model import Project, Snapshot, Todo
 
 _FDA_HINT = ("Cannot read the Things database. If this runs from launchd, grant Full Disk Access "
-             "to the Python that runs sig (System Settings > Privacy & Security).")
+             "to the Python that runs solve-it-grid (System Settings > Privacy & Security).")
 
 
 class ThingsUnavailable(Exception):

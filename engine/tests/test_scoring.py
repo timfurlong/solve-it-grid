@@ -3,15 +3,15 @@ from datetime import date, datetime
 import pytest
 from factories import todo
 
-from sig.config import load_config
-from sig.paths import repo_root
-from sig.scoring import score_week, unit_ids
-from sig.weeks import week_of
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
+from solve_it_grid.scoring import score_week, unit_ids
+from solve_it_grid.weeks import week_of
 
 AREAS = {"Work": "A-W", "Home": "A-H"}
 WEEK = week_of(date(2026, 9, 28))
 WED = datetime(2026, 9, 30, 12, 0)
-Y, G, R = "🟡 Yellow", "🟢 Green", "🔴 Red"
+Y, G, R = "🟡", "🟢", "🔴"
 
 
 @pytest.fixture
@@ -61,8 +61,8 @@ def test_excluded_statuses_and_markers(cfg):
         todo(uuid="c", status="canceled", stop=WED, tags=(Y,), area_id="A-W"),
         todo(uuid="o", status="incomplete", tags=(Y,), area_id="A-W"),
         done("r", tags=(R,), area_id="A-W"),
-        done("b", tags=("🔵 Blue",), area_id="A-W"),
-        done("u", tags=("⚪ Unscored",), area_id="A-W"),
+        done("b", tags=("🔵",), area_id="A-W"),
+        done("u", tags=("⚪",), area_id="A-W"),
         done("n", tags=(), area_id="A-W"),
     ]
     s = score_week(items, cfg, AREAS, WEEK)

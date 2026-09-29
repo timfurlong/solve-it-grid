@@ -1,4 +1,4 @@
-"""`sig setup`: config, color tags and the launchd agent."""
+"""`solve-it-grid setup`: config, color tags and the launchd agent."""
 
 import os
 import shutil
@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from sig.config import load_config
-from sig.weeks import week_of
+from solve_it_grid.config import load_config
+from solve_it_grid.weeks import week_of
 
 LABEL = "com.github.timfurlong.solve-it-grid.categorize"
 
@@ -27,9 +27,9 @@ def _write_config(home: Path, repo: Path, now: datetime, which) -> str:
 
 
 def _install_agent(home: Path, repo: Path, run, which, agents_dir: Path) -> str:
-    sig = which("sig") or str(Path.home() / ".local" / "bin" / "sig")
+    cli = which("solve-it-grid") or str(Path.home() / ".local" / "bin" / "solve-it-grid")
     template = (repo / "launchd" / f"{LABEL}.plist").read_text(encoding="utf-8")
-    plist = (template.replace("__SIG__", escape(sig)).replace("__LOGDIR__", escape(str(home)))
+    plist = (template.replace("__CLI__", escape(cli)).replace("__LOGDIR__", escape(str(home)))
              .replace("__HOME__", escape(str(Path.home()))))
     agents_dir.mkdir(parents=True, exist_ok=True)
     target = agents_dir / f"{LABEL}.plist"

@@ -3,20 +3,21 @@ from datetime import date
 
 from factories import todo
 
-from sig.config import load_config
-from sig.model import colors_of, list_name
-from sig.paths import repo_root
+from solve_it_grid.config import load_config
+from solve_it_grid.model import colors_of, list_name
+from solve_it_grid.paths import repo_root
 
 TAGS = load_config(repo_root() / "config.example.toml").tags
 
 
 def test_colors_of_matches_nfd_tag():
-    t = todo(tags=[unicodedata.normalize("NFD", "🟢 Green")])
-    assert colors_of(t, TAGS) == ["green"]
+    custom = {**TAGS, "green": "Grün"}
+    t = todo(tags=[unicodedata.normalize("NFD", "Grün")])
+    assert colors_of(t, custom) == ["green"]
 
 
 def test_colors_of_multiple():
-    t = todo(tags=["🟡 Yellow", "Errand", "🟢 Green"])
+    t = todo(tags=["🟡", "Errand", "🟢"])
     assert colors_of(t, TAGS) == ["yellow", "green"]
 
 

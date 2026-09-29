@@ -4,12 +4,12 @@ from datetime import date, datetime, timedelta
 import pytest
 from factories import snapshot, todo
 
-from sig.config import load_config
-from sig.paths import repo_root
-from sig.progress import refresh, scoring_cutoff
-from sig.state import FrozenWeek, StateStore
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
+from solve_it_grid.progress import refresh, scoring_cutoff
+from solve_it_grid.state import FrozenWeek, StateStore
 
-Y, G = "🟡 Yellow", "🟢 Green"
+Y, G = "🟡", "🟢"
 
 
 def local(*args):

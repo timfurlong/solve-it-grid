@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
-from sig.model import Project, Todo, list_name
+from solve_it_grid.model import Project, Todo, list_name
 
 NOTES_LIMIT = 300
 # Blue (passive downtime) almost never appears on a to-do list, so the model never proposes it.

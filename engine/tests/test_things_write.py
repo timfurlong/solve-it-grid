@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from sig.things_write import ThingsWriteError, UrlSchemeWriter, ensure_tags
+from solve_it_grid.things_write import ThingsWriteError, UrlSchemeWriter, ensure_tags
 
 
 def fake_url(uuid=None, command="show", **params):
@@ -48,12 +48,12 @@ def test_missing_token_raises_write_error():
 
 
 def test_ensure_tags_escapes_quotes_and_parses_created():
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout='A "b"\n🟢 Green\n', stderr=""))
-    created = ensure_tags(['A "b"', "🟢 Green"], run=run)
+    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout='A "b"\n🟢\n', stderr=""))
+    created = ensure_tags(['A "b"', "🟢"], run=run)
     argv = run.call_args.args[0]
     assert argv[:2] == ["/usr/bin/osascript", "-e"]
     assert 'exists tag "A \\"b\\""' in argv[2]
-    assert created == ['A "b"', "🟢 Green"]
+    assert created == ['A "b"', "🟢"]
 
 
 def test_ensure_tags_nothing_created():

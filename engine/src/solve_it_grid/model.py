@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Literal
 
-from sig.config import COLORS, Color
+from solve_it_grid.config import COLORS, Color
 
 Status = Literal["incomplete", "completed", "canceled"]
 

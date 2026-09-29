@@ -6,9 +6,9 @@ from datetime import date, datetime
 
 import holidays
 
-from sig.config import Color, Config
-from sig.model import Snapshot, Todo, colors_of
-from sig.weeks import week_of
+from solve_it_grid.config import Color, Config
+from solve_it_grid.model import Snapshot, Todo, colors_of
+from solve_it_grid.weeks import week_of
 
 # Steps the user ticks by hand; every other step checks itself against Things.
 MANUAL_STEPS = ("today-reviewed", "colors-reviewed", "someday-review")

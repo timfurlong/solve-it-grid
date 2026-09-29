@@ -5,13 +5,13 @@ from datetime import date, datetime, timedelta
 import pytest
 from factories import DEFAULT_TAGS, snapshot, todo
 
-from sig.config import load_config
-from sig.paths import repo_root
-from sig.state import StateStore
-from sig.status import build_status, health_errors, render_text
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
+from solve_it_grid.state import StateStore
+from solve_it_grid.status import build_status, health_errors, render_text
 
 NOW = datetime(2026, 10, 1, 10, 0).astimezone()
-Y = "🟡 Yellow"
+Y = "🟡"
 
 
 @pytest.fixture
@@ -52,9 +52,10 @@ def test_status_shape(cfg, state):
 
 
 def test_missing_tag_reported(cfg, state):
-    snap = snapshot(tag_names=DEFAULT_TAGS - {"🟢 Green"})
+    snap = snapshot(tag_names=DEFAULT_TAGS - {"🟢"})
     assert health_errors(snap, state, cfg, NOW) == [
-        {"source": "setup", "message": "Missing Things tags: 🟢 Green. Run sig setup.", "since": None}]
+        {"source": "setup", "message": "Missing Things tags: 🟢. Run solve-it-grid setup.",
+         "since": None}]
 
 
 def test_missing_area_reported(cfg, state):
@@ -73,7 +74,8 @@ def test_token_off_reported(cfg, state):
 def test_review_pending_reported(cfg, tmp_path):
     fresh = StateStore(tmp_path / "fresh.db")
     assert [e["message"] for e in health_errors(snapshot(), fresh, cfg, NOW)] == [
-        "First review pending. Run sig categorize --dry-run, then sig categorize --apply-review."]
+        "First review pending. Run solve-it-grid categorize --dry-run, "
+        "then solve-it-grid categorize --apply-review."]
 
 
 def test_categorizer_streak_reported_with_since(cfg, state):

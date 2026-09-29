@@ -3,11 +3,11 @@ from datetime import date, datetime
 import pytest
 from factories import project, snapshot, todo
 
-from sig.checkin import evaluate_checkin, is_workday, show_url
-from sig.config import load_config
-from sig.paths import repo_root
+from solve_it_grid.checkin import evaluate_checkin, is_workday, show_url
+from solve_it_grid.config import load_config
+from solve_it_grid.paths import repo_root
 
-R, Y, G = "🔴 Red", "🟡 Yellow", "🟢 Green"
+R, Y, G = "🔴", "🟡", "🟢"
 THU_10 = datetime(2026, 10, 1, 10, 0).astimezone()
 
 
@@ -98,7 +98,7 @@ def test_someday_review_only_on_monday_and_tickable(cfg):
 
 
 def test_tag_link_is_encoded():
-    assert show_url(query="🟢 Green") == "things:///show?query=%F0%9F%9F%A2%20Green"
+    assert show_url(query="🟢") == "things:///show?query=%F0%9F%9F%A2"
 
 
 def test_review_affirmations_are_manual_ticks(cfg):

@@ -40,11 +40,11 @@ Everything runs on the MacBook Pro, where Things, the menu bar and the user are.
      URL scheme    │               │ things.py (read-only)
      (writes)      │               ▼
             ┌──────┴──────────────────────────┐      claude -p (Sonnet)     
- launchd ──►│ engine: `sig` CLI (Python)      │─────► JSON classifier, no tools
+ launchd ──►│ engine: `solve-it-grid` CLI (Python)      │─────► JSON classifier, no tools
   10 min    │  categorize · status · chips    │
             └──────▲───────────────┬──────────┘
-                   │ sig chip ack  │ sig status --json
-                   │ sig checkin   ▼
+                   │ solve-it-grid chip ack  │ solve-it-grid status --json
+                   │ solve-it-grid checkin   ▼
             ┌──────┴──────────────────────────┐
             │ menu bar app (SwiftUI)          │──► notifications
             └─────────────────────────────────┘
@@ -55,29 +55,29 @@ Everything runs on the MacBook Pro, where Things, the menu bar and the user are.
 
 | Component | Responsibility | Depends on |
 |---|---|---|
-| `engine/` (`sig`) | All logic: reading Things, categorizing, scoring, chips, check-in state, holidays | things.py, `claude` CLI, Things URL scheme, SQLite |
-| `menubar/` | Rendering, notifications, snooze timers | `sig` CLI only |
-| launchd agent | Runs `sig categorize` every 10 minutes | `sig` |
+| `engine/` (`solve-it-grid`) | All logic: reading Things, categorizing, scoring, chips, check-in state, holidays | things.py, `claude` CLI, Things URL scheme, SQLite |
+| `menubar/` | Rendering, notifications, snooze timers | `solve-it-grid` CLI only |
+| launchd agent | Runs `solve-it-grid categorize` every 10 minutes | `solve-it-grid` |
 | `/things` skill (user-level, outside this repo) | Colors to-dos at creation time | `rubric.md` |
 | Physical tracker | Two jars and yellow/green poker chips | the user |
 
-The menu bar app never reads Things or the state database directly. Every read goes through `sig status --json` and every write through a `sig` subcommand, so all behavior lives in one tested Python codebase.
+The menu bar app never reads Things or the state database directly. Every read goes through `solve-it-grid status --json` and every write through a `solve-it-grid` subcommand, so all behavior lives in one tested Python codebase.
 
 ## Data model
 
 ### Colors are Things tags
 
-Five tags, created once by `sig setup`:
+Five tags, created once by `solve-it-grid setup`:
 
 | Marker | Default tag name |
 |---|---|
-| red | `🔴 Red` |
-| yellow | `🟡 Yellow` |
-| green | `🟢 Green` |
-| blue | `🔵 Blue` |
-| unscored | `⚪ Unscored` |
+| red | `🔴` |
+| yellow | `🟡` |
+| green | `🟢` |
+| blue | `🔵` |
+| unscored | `⚪` |
 
-Tag names are configurable. Only to-dos get a color. Projects, headings and checklist items do not.
+Tag names are just the color emoji, so they stay compact in Things' list view, and they are configurable. Only to-dos get a color. Projects, headings and checklist items do not.
 
 A to-do with no color tag is uncategorized and is not scored until the categorizer colors it. A to-do with more than one color tag is not scored and is flagged in the check-in.
 
@@ -102,19 +102,19 @@ Each point of a target is a **unit**, so the week has four units: work yellow, h
 - **Goal done:** count reaches target. Completions beyond the target earn nothing extra.
 - **Week hit:** every goal is done.
 - **Streak:** consecutive hit weeks. The current week joins the streak once it is hit.
-- **Start:** tracking begins with the week `sig setup` first runs (`start_week` in the config). Earlier weeks are ignored.
+- **Start:** tracking begins with the week `solve-it-grid setup` first runs (`start_week` in the config). Earlier weeks are ignored.
 
 ### Chips
 
 - One chip per unit, so up to four per week: two yellow, two green.
 - A chip is awarded the moment its unit fills. Green 1 fills on the first green completion of the week, green 2 on the second.
-- An awarded chip stays **pending** until the user confirms moving it (`sig chip ack`).
+- An awarded chip stays **pending** until the user confirms moving it (`solve-it-grid chip ack`).
 - Chips are never revoked, even if a to-do is later uncompleted or recolored.
 - A completion colored after its week ended still awards its chip, as long as the week is not frozen yet.
 
 ### Week freezing
 
-A past week's result (units filled, hit, chips) is written to the state database and never recomputed once the week **freezes**. A week freezes 48 hours after it ends, which leaves time for completions made on the phone to sync once the Mac wakes and for the categorizer to color them. A week never freezes while `sig status` reports a setup problem (a missing tag or area), because those under-count. Freezing keeps history stable when goals, tags or colors are edited later. Until a week freezes, history shows its live score.
+A past week's result (units filled, hit, chips) is written to the state database and never recomputed once the week **freezes**. A week freezes 48 hours after it ends, which leaves time for completions made on the phone to sync once the Mac wakes and for the categorizer to color them. A week never freezes while `solve-it-grid status` reports a setup problem (a missing tag or area), because those under-count. Freezing keeps history stable when goals, tags or colors are edited later. Until a week freezes, history shows its live score.
 
 ### Storage
 
@@ -126,16 +126,16 @@ All user data lives in `~/Library/Application Support/solve-it-grid/`, never in 
 | `state.db` | SQLite: `chips`, `weeks` (frozen results), `checkins`, `runs` (categorizer run outcomes), `meta` |
 | `rubric.local.md` | optional personal examples appended to the classification prompt |
 | `review.tsv`, `review.items.jsonl` | the latest dry-run proposals (editable before `--apply-review`) and the item details behind them |
-| `golden.jsonl` | user-confirmed colors used by `sig eval` |
+| `golden.jsonl` | user-confirmed colors used by `solve-it-grid eval` |
 | `categorize.log.jsonl` | every assignment: time, uuid, title, color, area, reason, model |
 
-The repo ships `config.example.toml`, and `sig setup` copies it into place. The Things URL-scheme auth token is read from the Things database by things.py when a write needs it (Things > Settings > General > Enable Things URLs must be on). It is never stored, logged or printed.
+The repo ships `config.example.toml`, and `solve-it-grid setup` copies it into place. The Things URL-scheme auth token is read from the Things database by things.py when a write needs it (Things > Settings > General > Enable Things URLs must be on). It is never stored, logged or printed.
 
 ## Categorizer
 
 ### Schedule
 
-A launchd user agent runs `sig categorize` every 10 minutes. It can also be run by hand. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude. A run also stops, and counts as failed, while `sig status` reports a setup problem, so a renamed tag doesn't send the whole list back to Claude. When the model can't place an item's area, that item is left for the check-in and not asked about again for 24 hours.
+A launchd user agent runs `solve-it-grid categorize` every 10 minutes. It can also be run by hand. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude. A run also stops, and counts as failed, while `solve-it-grid status` reports a setup problem, so a renamed tag doesn't send the whole list back to Claude. When the model can't place an item's area, that item is left for the check-in and not asked about again for 24 hours.
 
 ### Scope
 
@@ -178,10 +178,10 @@ Items are skipped (and retried on the next run) when the response has an unknown
 
 ### First run and tuning
 
-- `sig categorize --dry-run` prints every proposed color and area and saves them to `review.tsv` without writing to Things.
-- After the user edits `review.tsv`, `sig categorize --apply-review` writes those colors and areas to Things and saves every reviewed row to `golden.jsonl`.
+- `solve-it-grid categorize --dry-run` prints every proposed color and area and saves them to `review.tsv` without writing to Things.
+- After the user edits `review.tsv`, `solve-it-grid categorize --apply-review` writes those colors and areas to Things and saves every reviewed row to `golden.jsonl`.
 - Scheduled runs do nothing until a review has been applied once.
-- `sig eval` runs the classifier over `golden.jsonl` and reports agreement per color plus the list of disagreements. This is the loop for tuning `rubric.md` and `rubric.local.md`.
+- `solve-it-grid eval` runs the classifier over `golden.jsonl` and reports agreement per color plus the list of disagreements. This is the loop for tuning `rubric.md` and `rubric.local.md`.
 
 ## Daily check-in
 
@@ -201,11 +201,11 @@ The check-in is guided: the popover lists steps and each open step links into Th
 | Colors look right | ticked by hand (`colors-reviewed`) | `things:///show?id=today` |
 | Review Someday (Mondays) | ticked by hand (`someday-review`) | `things:///show?id=someday` |
 
-"Done for today" (`sig checkin done`) is always available, whether or not every step is ticked. The check-in guides rather than polices. On Mondays the check-in header also shows last week's result and the streak.
+"Done for today" (`solve-it-grid checkin done`) is always available, whether or not every step is ticked. The check-in guides rather than polices. On Mondays the check-in header also shows last week's result and the streak.
 
 ## Menu bar app
 
-A SwiftUI `MenuBarExtra` (window style) that launches at login. It polls `sig status --json` every 60 seconds and whenever the popover opens.
+An AppKit `NSStatusItem` with an `NSPopover` hosting SwiftUI views (`MenuBarExtra` can't open its window from code, and the check-in notification's "Start check-in" button needs to). It launches at login and polls `solve-it-grid status --json` every 60 seconds, whenever the popover opens, and when the Mac wakes.
 
 ### Icon: ring
 
@@ -243,7 +243,7 @@ The center shows the single most important signal, in this priority order:
 
 - The four poker chips are drawn like the physical ones. An earned chip is solid ("In the jar"). A pending chip is solid, lifted and gently animated ("Move it now"). An open unit is a dashed outline ("Not yet"). Animation respects Reduce Motion.
 - The acknowledge button appears only while chips are pending and names them ("I moved the yellow chip", "I moved 2 chips"). It acknowledges every pending chip shown.
-- Steps with `"manual": true` render as a checkbox the user clicks, which runs `sig checkin tick <id>`. Every other step ticks itself.
+- Steps with `"manual": true` render as a checkbox the user clicks, which runs `solve-it-grid checkin tick <id>`. Every other step ticks itself.
 - A pending chip belongs to the unit with the same `unit` id only when its `week_start` is the current week. A chip left over from last week shows as its own "Move it now" row.
 - **History** opens a small window with the last 12 weeks (units filled, hit or miss, chips) plus the current and best streak.
 
@@ -251,34 +251,34 @@ The center shows the single most important signal, in this priority order:
 
 | Notification | When | Actions |
 |---|---|---|
-| Check-in | workdays at 9:00, if the check-in is not done | **Start check-in** (opens the popover), **Snooze 1 hour** (repeatable) |
-| Chip earned | when a new chip is awarded, e.g. "Home yellow done. Move a yellow chip." | opens the popover |
-| Error | when the error state begins, then every 2 hours while it lasts | opens the popover |
+| Check-in | workdays at 9:00 (or on wake after that), if the check-in is not done: "Time for your check-in", "4 steps left" | **Start check-in** (opens the popover), **Snooze 1 hour** (repeatable) |
+| Chip earned | when a new chip is awarded: "Chip earned", "Home yellow done. Move a yellow chip." | opens the popover |
+| Error | when the error state begins, then every 2 hours while it lasts: "Solve It Grid needs attention" and the error detail | opens the popover |
 
 Check-in notifications use the time-sensitive interruption level if the app can get that entitlement with local signing. Otherwise they are standard notifications, and setup instructs the user to set the app's notification style to Alerts so they stay on screen until handled.
 
 ### Error state
 
-The error state is meant to be hard to ignore. It triggers when `sig status` fails or times out, when the categorizer has failed three runs in a row, or when `sig status` reports a setup problem (missing color tags, an area title not found in Things, Things URLs turned off, or the first review not applied yet). In the error state:
+The error state is meant to be hard to ignore. It triggers when `solve-it-grid status` fails or times out, when the categorizer has failed three runs in a row, or when `solve-it-grid status` reports a setup problem (missing color tags, an area title not found in Things, Things URLs turned off, or the first review not applied yet). In the error state:
 
 - The ring is replaced by a filled red warning triangle.
 - The popover opens with an error banner at the top: what failed, since when, and the likely fix (for example "Claude Code is not logged in: run `claude` in a terminal").
 - The last good status stays visible below the banner.
 - A notification is posted when the error begins and every 2 hours until it clears.
 
-## `sig` CLI
+## `solve-it-grid` CLI
 
 | Command | Purpose |
 |---|---|
-| `sig setup [--no-agent]` | create the five tags (AppleScript), write `config.toml` from the example, check areas and the Things URL token, install the launchd agent |
-| `sig categorize [--dry-run \| --apply-review [PATH]]` | one categorizer run, a dry run to `review.tsv`, or apply a reviewed file |
-| `sig status [--json]` | current week, chips, check-in, hygiene, health, history. Human-readable by default |
-| `sig chip ack <id\|all>` | confirm pending chips were moved |
-| `sig checkin done` | mark today's check-in done |
-| `sig checkin tick <step>` | tick a manual step (`today-reviewed`, `colors-reviewed`, `someday-review`) |
-| `sig eval` | score the classifier against `golden.jsonl` |
+| `solve-it-grid setup [--no-agent]` | create the five tags (AppleScript), write `config.toml` from the example, check areas and the Things URL token, install the launchd agent |
+| `solve-it-grid categorize [--dry-run \| --apply-review [PATH]]` | one categorizer run, a dry run to `review.tsv`, or apply a reviewed file |
+| `solve-it-grid status [--json]` | current week, chips, check-in, hygiene, health, history. Human-readable by default |
+| `solve-it-grid chip ack <id\|all>` | confirm pending chips were moved |
+| `solve-it-grid checkin done` | mark today's check-in done |
+| `solve-it-grid checkin tick <step>` | tick a manual step (`today-reviewed`, `colors-reviewed`, `someday-review`) |
+| `solve-it-grid eval` | score the classifier against `golden.jsonl` |
 
-`sig status --json` is the contract with the menu bar app:
+`solve-it-grid status --json` is the contract with the menu bar app:
 
 ```json
 {
@@ -325,8 +325,8 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 | URL-scheme write did not land | logged as a failure for that item, retried next run |
 | overlapping categorizer run | exits immediately (file lock) |
 | Things closed | reads work (database). Writes launch Things in the background |
-| Things database schema change breaks things.py | `sig status` fails, which triggers the error state |
-| `sig status` fails or exceeds 10 seconds | menu bar error state, last good status kept |
+| Things database schema change breaks things.py | `solve-it-grid status` fails, which triggers the error state |
+| `solve-it-grid status` fails or exceeds 10 seconds | menu bar error state, last good status kept |
 
 ## Testing
 
@@ -340,8 +340,8 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 - **Freezing:** freezes on complete categorization or at 48 hours. Frozen weeks survive goal and tag edits.
 - **Check-in:** step evaluation against fixtures, workday and holiday calendar.
 - **Categorizer:** prompt building and response validation against canned `claude` output (subprocess stubbed). Things writes go through an interface with an in-memory fake.
-- **Smoke:** `sig status` against the real Things database (read-only).
-- **Classifier quality:** `sig eval` against the golden set. This is not part of the test suite.
+- **Smoke:** `solve-it-grid status` against the real Things database (read-only).
+- **Classifier quality:** `solve-it-grid eval` against the golden set. This is not part of the test suite.
 - **Menu bar app:** unit tests decode `status.json` fixtures and map status to icon state (a pure function). Notification actions are verified by hand.
 
 ## Repository
@@ -350,8 +350,8 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 - Layout:
 
   ```
-  engine/               Python package `sig` (uv), installed with `uv tool install`
-  menubar/              SwiftUI app (Xcode project)
+  engine/               Python package `solve_it_grid` (uv), installed with `uv tool install` as the `solve-it-grid` CLI
+  menubar/              Swift package: SolveItGridCore (decisions, tested) and SolveItGrid (AppKit shell), plus scripts/build-app.sh
   launchd/              categorizer agent plist template
   rubric.md             grid definitions and classification rules
   config.example.toml   default config
@@ -368,8 +368,8 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 Each phase gets its own implementation plan.
 
 1. **Engine.**
-   - `sig` with setup, categorize, status, chips, check-in and eval.
+   - `solve-it-grid` with setup, categorize, status, chips, check-in and eval.
    - The launchd agent, `rubric.md`, and the `/things` skill change.
    - README and LICENSE.
-   - Usable from the terminal on its own: `sig status` shows the week, and chips are acknowledged with `sig chip ack`.
-2. **Menu bar app.** The ring icon, popover, history window, notifications and error state, all driven by `sig status --json`.
+   - Usable from the terminal on its own: `solve-it-grid status` shows the week, and chips are acknowledged with `solve-it-grid chip ack`.
+2. **Menu bar app.** The ring icon, popover, history window, notifications and error state, all driven by `solve-it-grid status --json`.

@@ -3,12 +3,12 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from sig.config import Config
-from sig.model import Snapshot
-from sig.scoring import WeekScore, score_week
-from sig.setup_check import setup_problems
-from sig.state import Chip, FrozenWeek, StateStore
-from sig.weeks import Week, ended_at, week_of
+from solve_it_grid.config import Config
+from solve_it_grid.model import Snapshot
+from solve_it_grid.scoring import WeekScore, score_week
+from solve_it_grid.setup_check import setup_problems
+from solve_it_grid.state import Chip, FrozenWeek, StateStore
+from solve_it_grid.weeks import Week, ended_at, week_of
 
 # Phone completions sync when the Mac wakes, so a finished week stays open this long.
 FREEZE_GRACE = timedelta(hours=48)

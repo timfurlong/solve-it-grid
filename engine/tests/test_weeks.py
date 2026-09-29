@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sig.weeks import Week, ended_at, week_of
+from solve_it_grid.weeks import Week, ended_at, week_of
 
 
 def test_week_of_sunday_and_monday():
