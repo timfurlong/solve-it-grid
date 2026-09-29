@@ -14,9 +14,9 @@ private func healthy() throws -> Status { try Status.decode(fixture("status-thur
 }
 
 @Test func timedOutReport() {
-    let r = errorReport(failure: failing(.timedOut(seconds: 10)), status: nil)
-    #expect(r?.title == "solve-it-grid status timed out" && r?.detail == "No answer after 10 seconds.")
-    #expect(r?.fix == "Check that Things is running.")
+    let r = errorReport(failure: failing(.timedOut(seconds: 15)), status: nil)
+    #expect(r?.title == "solve-it-grid status timed out" && r?.detail == "No answer after 15 seconds.")
+    #expect(r?.fix == "Run solve-it-grid status in a terminal to see if it hangs.")
 }
 
 @Test func failedReportUsesLastStderrLine() {

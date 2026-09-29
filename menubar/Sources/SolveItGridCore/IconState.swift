@@ -12,10 +12,25 @@ public enum CLIError: Error, Equatable, Sendable {
 public struct CLIFailure: Equatable, Sendable {
     public var error: CLIError
     public var since: Date
+    /// Failed polls in a row, counting this one.
+    public var count: Int
 
-    public init(error: CLIError, since: Date) {
+    public init(error: CLIError, since: Date, count: Int = 1) {
         self.error = error
         self.since = since
+        self.count = count
+    }
+
+    /// The run after one more failed poll: the newest error, the original start, one more in a row.
+    public static func next(_ error: CLIError, after previous: CLIFailure?, now: Date) -> CLIFailure {
+        CLIFailure(error: error, since: previous?.since ?? now, count: (previous?.count ?? 0) + 1)
+    }
+
+    /// A lone timeout is usually the Mac stalling for a moment, so it stays hidden unless the next
+    /// poll times out too. Every other failure needs a fix and shows at once.
+    public var isShown: Bool {
+        if case .timedOut = error { return count >= 2 }
+        return true
     }
 }
 

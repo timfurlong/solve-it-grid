@@ -260,7 +260,7 @@ Check-in notifications request the time-sensitive interruption level, but a loca
 
 ### Error state
 
-The error state is meant to be hard to ignore. It triggers when `solve-it-grid status` fails or times out, when the categorizer has failed three runs in a row, or when `solve-it-grid status` reports a setup problem (missing color tags, an area title not found in Things, Things URLs turned off, or the first review not applied yet). In the error state:
+The error state is meant to be hard to ignore. It triggers when `solve-it-grid status` fails, when it times out on two polls in a row (a lone timeout is usually the Mac stalling for a moment, so it stays hidden), when the categorizer has failed three runs in a row, or when `solve-it-grid status` reports a setup problem (missing color tags, an area title not found in Things, Things URLs turned off, or the first review not applied yet). In the error state:
 
 - The ring is replaced by a filled red warning triangle.
 - The popover opens with an error banner at the top: what failed, since when, and the likely fix (for example "Claude Code is not logged in: run `claude` in a terminal").
@@ -327,7 +327,8 @@ Two jars on the desk, in view: a **to earn** jar and a **done** jar. It starts w
 | overlapping categorizer run | exits immediately (file lock) |
 | Things closed | reads work (database). Writes launch Things in the background |
 | Things database schema change breaks things.py | `solve-it-grid status` fails, which triggers the error state |
-| `solve-it-grid status` fails or exceeds 10 seconds | menu bar error state, last good status kept |
+| `solve-it-grid status` fails | menu bar error state, last good status kept |
+| `solve-it-grid status` exceeds 10 seconds | ignored once. Two polls in a row trigger the error state, last good status kept |
 
 ## Testing
 

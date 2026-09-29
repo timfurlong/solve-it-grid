@@ -23,9 +23,10 @@ public func errorReport(failure: CLIFailure?, status: Status?) -> ErrorReport? {
         case let .notFound(path):
             return ErrorReport(title: "solve-it-grid not found", detail: path,
                                fix: "Install it from the repo: uv tool install --editable ./engine", since: since)
-        case .timedOut:
-            return ErrorReport(title: "solve-it-grid status timed out", detail: "No answer after 10 seconds.",
-                               fix: "Check that Things is running.", since: since)
+        case let .timedOut(seconds):
+            return ErrorReport(title: "solve-it-grid status timed out",
+                               detail: "No answer after \(Int(seconds)) seconds.",
+                               fix: "Run solve-it-grid status in a terminal to see if it hangs.", since: since)
         case let .failed(exitCode, stderr):
             let lastLine = stderr.split(whereSeparator: \.isNewline)
                 .map { $0.trimmingCharacters(in: .whitespaces) }

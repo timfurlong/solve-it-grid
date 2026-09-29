@@ -8,7 +8,10 @@ import SolveItGridCore
 final class AppModel {
     /// The last status that decoded successfully; kept on screen while an error is shown.
     private(set) var status: Status?
+    /// The failure the banner, icon and notifications report. Nil while a lone timeout is held back.
     private(set) var failure: CLIFailure?
+    /// Every failed poll in the current run, shown or not.
+    @ObservationIgnored private var failureRun: CLIFailure?
     private(set) var memory: NotificationMemory
 
     @ObservationIgnored var onChange: (() -> Void)?
@@ -43,13 +46,14 @@ final class AppModel {
     private func fetchAndPlan() async {
         do {
             status = try await client.status()
-            failure = nil
+            failureRun = nil
         } catch let error as CLIError {
-            failure = CLIFailure(error: error, since: failure?.since ?? Date())
+            failureRun = .next(error, after: failureRun, now: Date())
         } catch {
-            failure = CLIFailure(error: .failed(exitCode: -1, stderr: String(describing: error)),
-                                 since: failure?.since ?? Date())
+            failureRun = .next(.failed(exitCode: -1, stderr: String(describing: error)), after: failureRun,
+                               now: Date())
         }
+        failure = failureRun?.isShown == true ? failureRun : nil
         let planned = planNotifications(now: Date(), calendar: .current, status: status, failure: failure,
                                         memory: memory)
         memory = planned.memory
@@ -64,6 +68,7 @@ final class AppModel {
     /// Shows a given status without calling the CLI (snapshots only).
     func show(_ status: Status) {
         self.status = status
+        failureRun = nil
         failure = nil
     }
 
