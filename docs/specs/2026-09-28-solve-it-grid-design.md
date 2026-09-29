@@ -102,6 +102,7 @@ Each point of a target is a **unit**, so the week has four units: work yellow, h
 - **Goal done:** count reaches target. Completions beyond the target earn nothing extra.
 - **Week hit:** every goal is done.
 - **Streak:** consecutive hit weeks. The current week joins the streak once it is hit.
+- **Start:** tracking begins with the week `sig setup` first runs (`start_week` in the config). Earlier weeks are ignored.
 
 ### Chips
 
@@ -121,13 +122,14 @@ All user data lives in `~/Library/Application Support/solve-it-grid/`, never in 
 
 | File | Contents |
 |---|---|
-| `config.toml` | goals, tag names, area titles, check-in time, categorizer settings, `claude` path |
-| `state.db` | SQLite: `chips`, `weeks` (frozen results), `checkins`, `runs` (categorizer run outcomes) |
+| `config.toml` | start week, goals, tag names, area titles, check-in time, categorizer settings, `claude` path |
+| `state.db` | SQLite: `chips`, `weeks` (frozen results), `checkins`, `runs` (categorizer run outcomes), `meta` |
 | `rubric.local.md` | optional personal examples appended to the classification prompt |
+| `review.tsv` | the latest dry-run proposals, editable before `--apply-review` |
 | `golden.jsonl` | user-confirmed colors used by `sig eval` |
 | `categorize.log.jsonl` | every assignment: time, uuid, title, color, area, reason, model |
 
-The repo ships `config.example.toml`, and `sig setup` copies it into place. The Things URL-scheme auth token is stored in the macOS Keychain (service `solve-it-grid`, account `things-auth-token`).
+The repo ships `config.example.toml`, and `sig setup` copies it into place. The Things URL-scheme auth token is read from the Things database by things.py when a write needs it (Things > Settings > General > Enable Things URLs must be on). It is never stored, logged or printed.
 
 ## Categorizer
 
@@ -149,7 +151,7 @@ Inbox to-dos get a color but are never filed into an area: the Inbox is the chec
 ### Classification
 
 - One `claude -p` call per batch of up to 25 items, using Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) through the locally logged-in Claude Code CLI (subscription auth, no API key).
-- The call runs with no tools, no MCP servers, and no user or project `CLAUDE.md`, and requests structured JSON output. The exact CLI flags are pinned in the implementation plan.
+- The call runs with no tools, no MCP servers, no settings, hooks or plugins, and no user or project `CLAUDE.md`, and requests structured JSON output. The exact CLI flags are pinned in the implementation plan. (`--bare` is not usable because it disables subscription login.)
 - Input per item: uuid, title, notes (first 300 characters), project, heading, area, deadline, start list, status.
 - Output per item: `{uuid, color, area, reason}`, where `color` is one of `red | yellow | green | blue | unscored`, and `area` is `work | home | null`. `null` means no area is needed or the model is unsure.
 - The prompt is built from `rubric.md` (in the repo: grid definitions and classification rules) plus `rubric.local.md` (personal examples, never committed).
@@ -177,8 +179,9 @@ Items are skipped (and retried on the next run) when the response has an unknown
 
 ### First run and tuning
 
-- `sig categorize --dry-run` prints every proposed color and area without writing anything.
-- The first real write happens only after the user reviews the dry run. The user's corrections are saved to `golden.jsonl`.
+- `sig categorize --dry-run` prints every proposed color and area and saves them to `review.tsv` without writing to Things.
+- After the user edits `review.tsv`, `sig categorize --apply-review` writes those colors and areas to Things and saves every reviewed row to `golden.jsonl`.
+- Scheduled runs do nothing until a review has been applied once.
 - `sig eval` runs the classifier over `golden.jsonl` and reports agreement per color plus the list of disagreements. This is the loop for tuning `rubric.md` and `rubric.local.md`.
 
 ## Daily check-in
@@ -262,11 +265,12 @@ The error state is meant to be hard to ignore. It triggers when `sig status` fai
 
 | Command | Purpose |
 |---|---|
-| `sig setup` | create the five tags (AppleScript), store the Things auth token in Keychain, write `config.toml` from the example, install the launchd agent |
-| `sig categorize [--dry-run]` | one categorizer run |
+| `sig setup [--no-agent]` | create the five tags (AppleScript), write `config.toml` from the example, check areas and the Things URL token, install the launchd agent |
+| `sig categorize [--dry-run \| --apply-review [PATH]]` | one categorizer run, a dry run to `review.tsv`, or apply a reviewed file |
 | `sig status [--json]` | current week, chips, check-in, hygiene, health, history. Human-readable by default |
 | `sig chip ack <id\|all>` | confirm pending chips were moved |
 | `sig checkin done` | mark today's check-in done |
+| `sig checkin tick <step>` | tick a manual step (`someday-review`) |
 | `sig eval` | score the classifier against `golden.jsonl` |
 
 `sig status --json` is the contract with the menu bar app:
