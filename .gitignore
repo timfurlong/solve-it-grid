@@ -1,0 +1,30 @@
+# Exploration artifacts: option boards, mockup variants, alternatives considered.
+# Docs in git describe the final agreed state only.
+docs/explorations/
+
+# macOS
+.DS_Store
+
+# Claude Code local state
+.claude/worktrees/
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Xcode / Swift
+DerivedData/
+.build/
+xcuserdata/
+*.xcuserstate
+
+# Local config and secrets
+.env
+.env.*
