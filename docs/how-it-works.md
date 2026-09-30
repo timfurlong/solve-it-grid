@@ -28,7 +28,7 @@ The engine reads the Things database directly with [things.py](https://github.co
 
 ## The categorizer
 
-A launchd agent runs `solve-it-grid categorize` every 10 minutes. Each run collects open and recently completed to-dos with no color tag, plus to-dos and projects that need an area. When there's nothing to do, it ends without calling Claude.
+A launchd agent runs `solve-it-grid categorize` every 10 minutes. When the menu bar app is installed, the agent starts the app's executable with `--categorize`, which runs the CLI as its child. macOS then attributes the categorizer's reads of the Things database to Solve It Grid rather than to Python, so it asks for access once, on the app's behalf. Each run collects open and recently completed to-dos with no color tag, plus to-dos and projects that need an area. When there's nothing to do, it ends without calling Claude.
 
 Items go to Claude in batches of up to 25 through `claude -p`, using your logged-in Claude Code subscription (no API key). The call runs with no tools, no MCP servers, no settings or plugins, and no `CLAUDE.md`, and asks for structured JSON back. The prompt is [`rubric.md`](../rubric.md) plus your optional `rubric.local.md`.
 

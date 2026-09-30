@@ -57,7 +57,7 @@ Everything runs on the Mac, where Things, the menu bar and the user are. Things 
 |---|---|---|
 | `engine/` (`solve-it-grid`) | All logic: reading Things, categorizing, scoring, chips, check-in state, holidays | things.py, `claude` CLI, Things URL scheme, SQLite |
 | `menubar/` | Rendering, notifications, snooze timers | `solve-it-grid` CLI only |
-| launchd agent | Runs `solve-it-grid categorize` every 10 minutes | `solve-it-grid` |
+| launchd agent | Runs `solve-it-grid categorize` every 10 minutes, through the menu bar app's executable when the app is installed | `solve-it-grid` |
 | `/things` Claude Code skill (optional, user-level, outside this repo) | Colors to-dos at creation time | `rubric.md` |
 | Physical tracker | Two jars and yellow/green poker chips | the user |
 
@@ -135,7 +135,7 @@ The repo ships `config.example.toml`, and `solve-it-grid setup` copies it into p
 
 ### Schedule
 
-A launchd user agent runs `solve-it-grid categorize` every 10 minutes. It can also be run by hand. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude. A run also stops, and counts as failed, while `solve-it-grid status` reports a setup problem, so a renamed tag doesn't send the whole list back to Claude. When the model can't place an item's area, that item is left for the check-in and not asked about again for 24 hours.
+A launchd user agent runs `solve-it-grid categorize` every 10 minutes. It can also be run by hand. When `Solve It Grid.app` is installed (in `~/Applications` or `/Applications`), the agent's program is the app's executable with `--categorize`, which runs the CLI as a plain child process and exits with its status. Things' database lives in a protected app container, and this way macOS attributes the reads to the app's bundle identity, which holds the data-access grant, instead of prompting about the bare Python interpreter. Without the app, the agent runs the CLI directly. A file lock makes an overlapping run exit immediately. When there is nothing to categorize, the run ends without calling Claude. A run also stops, and counts as failed, while `solve-it-grid status` reports a setup problem, so a renamed tag doesn't send the whole list back to Claude. When the model can't place an item's area, that item is left for the check-in and not asked about again for 24 hours.
 
 ### Scope
 
@@ -246,6 +246,7 @@ The center shows the single most important signal, in this priority order:
 - Steps with `"manual": true` render as a checkbox the user clicks, which runs `solve-it-grid checkin tick <id>`. Every other step ticks itself.
 - A pending chip belongs to the unit with the same `unit` id only when its `week_start` is the current week. A chip left over from an earlier week shows as its own row ("Home yellow, week of Sep 28", "Move it now").
 - **History** opens a small window with the last 12 weeks (units filled, hit or miss, chips) plus the current and best streak.
+- `SolveItGrid --categorize` runs one `solve-it-grid categorize` pass as a child with no UI. It is the launchd agent's program when the app is installed.
 - `SolveItGrid --snapshot <dir> [--status <file.json>]` renders the popover and history window to PNGs in light and dark mode, for checking the layout without screen-recording permission.
 
 ### Notifications
@@ -271,7 +272,7 @@ The error state is meant to be hard to ignore. It triggers when `solve-it-grid s
 
 | Command | Purpose |
 |---|---|
-| `solve-it-grid setup [--no-agent]` | create the five tags (AppleScript), write `config.toml` from the example, check areas and the Things URL token, install the launchd agent |
+| `solve-it-grid setup [--no-agent]` | create the five tags (AppleScript), write `config.toml` from the example, check areas and the Things URL token, install the launchd agent (through the menu bar app when it's installed) |
 | `solve-it-grid categorize [--dry-run \| --apply-review [PATH]]` | one categorizer run, a dry run to `review.tsv`, or apply a reviewed file |
 | `solve-it-grid status [--json]` | current week, chips, check-in, hygiene, health, history. Human-readable by default |
 | `solve-it-grid chip ack <id\|all>` | confirm pending chips were moved |

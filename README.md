@@ -61,7 +61,7 @@ Nothing is written to Things until you've reviewed Claude's first batch of color
 
 ## Docs
 
-- [Setup](docs/setup.md): install, first review, Full Disk Access, the menu bar app
+- [Setup](docs/setup.md): install, first review, access to Things' data, the menu bar app
 - [Using Solve It Grid](docs/usage.md): colors, goals and chips, the check-in, the ring, commands, tuning
 - [How it works](docs/how-it-works.md): architecture, the categorizer, privacy
 - [Development](docs/development.md): layout, tests, contributing

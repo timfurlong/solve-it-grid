@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Template rendered by `solve-it-grid setup` into ~/Library/LaunchAgents. -->
+<!-- Template rendered by `solve-it-grid setup` into ~/Library/LaunchAgents. With the menu bar app
+     installed, the program is the app's executable with `--categorize`, which runs
+     `solve-it-grid categorize` as its child so macOS attributes reads of the Things database to the
+     app. Without it, the program is the CLI itself with `categorize`. -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.github.timfurlong.solve-it-grid.categorize</string>
     <key>ProgramArguments</key>
     <array>
-        <string>__CLI__</string>
-        <string>categorize</string>
+        <string>__PROGRAM__</string>
+        <string>__COMMAND__</string>
     </array>
     <key>StartInterval</key>
     <integer>600</integer>

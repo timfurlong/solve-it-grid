@@ -11,6 +11,7 @@ from solve_it_grid.config import load_config
 from solve_it_grid.weeks import week_of
 
 LABEL = "com.github.timfurlong.solve-it-grid.categorize"
+APP = "Solve It Grid.app"
 
 
 def _write_config(home: Path, repo: Path, now: datetime, which) -> str:
@@ -26,28 +27,44 @@ def _write_config(home: Path, repo: Path, now: datetime, which) -> str:
     return f"Wrote {path}"
 
 
-def _install_agent(home: Path, repo: Path, run, which, agents_dir: Path) -> str:
-    cli = which("solve-it-grid") or str(Path.home() / ".local" / "bin" / "solve-it-grid")
+def _app_executable(app_dirs: list[Path]) -> Path | None:
+    for directory in app_dirs:
+        exe = directory / APP / "Contents" / "MacOS" / "SolveItGrid"
+        if os.access(exe, os.X_OK):
+            return exe
+    return None
+
+
+def _install_agent(home: Path, repo: Path, run, which, agents_dir: Path, app_dirs: list[Path]) -> str:
+    # Running through the app makes macOS ask for access to Things' data once, for Solve It Grid,
+    # instead of asking about the bare Python interpreter.
+    app = _app_executable(app_dirs)
+    if app:
+        program, command, how = str(app), "--categorize", f"through {app.parents[2]}"
+    else:
+        program = which("solve-it-grid") or str(Path.home() / ".local" / "bin" / "solve-it-grid")
+        command, how = "categorize", f"with {program}"
     template = (repo / "launchd" / f"{LABEL}.plist").read_text(encoding="utf-8")
-    plist = (template.replace("__CLI__", escape(cli)).replace("__LOGDIR__", escape(str(home)))
-             .replace("__HOME__", escape(str(Path.home()))))
+    plist = (template.replace("__PROGRAM__", escape(program)).replace("__COMMAND__", command)
+             .replace("__LOGDIR__", escape(str(home))).replace("__HOME__", escape(str(Path.home()))))
     agents_dir.mkdir(parents=True, exist_ok=True)
     target = agents_dir / f"{LABEL}.plist"
     target.write_text(plist, encoding="utf-8")
     domain = f"gui/{os.getuid()}"
     run(["launchctl", "bootout", f"{domain}/{LABEL}"], check=False, capture_output=True)
     run(["launchctl", "bootstrap", domain, str(target)], check=True, capture_output=True)
-    return f"Installed launchd agent {target} (runs every 10 minutes)"
+    return f"Installed launchd agent {target} (runs every 10 minutes {how})"
 
 
 def run_setup(home: Path, repo: Path, now: datetime, *, ensure_tags_fn, install_agent: bool,
               run=subprocess.run, which=shutil.which,
-              agents_dir: Path | None = None) -> list[str]:
+              agents_dir: Path | None = None, app_dirs: list[Path] | None = None) -> list[str]:
     agents_dir = agents_dir or Path.home() / "Library" / "LaunchAgents"
+    app_dirs = app_dirs or [Path.home() / "Applications", Path("/Applications")]
     messages = [_write_config(home, repo, now, which)]
     cfg = load_config(home / "config.toml")
     created = ensure_tags_fn(list(cfg.tags.values()))
     messages.append(f"Created tags: {', '.join(created)}" if created else "All color tags already exist")
     if install_agent:
-        messages.append(_install_agent(home, repo, run, which, agents_dir))
+        messages.append(_install_agent(home, repo, run, which, agents_dir, app_dirs))
     return messages

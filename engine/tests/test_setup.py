@@ -18,7 +18,16 @@ def ensure():
 def _setup(tmp_path, ensure, install_agent=False, run=None):
     return run_setup(tmp_path / "home", repo_root(), NOW, ensure_tags_fn=ensure,
                      install_agent=install_agent, run=run or Mock(),
-                     which=lambda name: f"/bin/{name}", agents_dir=tmp_path / "agents")
+                     which=lambda name: f"/bin/{name}", agents_dir=tmp_path / "agents",
+                     app_dirs=[tmp_path / "apps"])
+
+
+def _install_app(tmp_path):
+    exe = tmp_path / "apps" / "Solve It Grid.app" / "Contents" / "MacOS" / "SolveItGrid"
+    exe.parent.mkdir(parents=True)
+    exe.write_text("")
+    exe.chmod(0o755)
+    return exe
 
 
 def test_setup_writes_config_once(tmp_path, ensure):
@@ -48,6 +57,17 @@ def test_setup_renders_plist_and_bootstraps(tmp_path, ensure):
     calls = [c.args[0] for c in run.call_args_list]
     assert calls[0][:2] == ["launchctl", "bootout"] and run.call_args_list[0].kwargs["check"] is False
     assert calls[1][:2] == ["launchctl", "bootstrap"] and calls[1][-1].endswith(f"{LABEL}.plist")
+
+
+def test_setup_runs_agent_through_installed_app(tmp_path, ensure):
+    (tmp_path / "home").mkdir()
+    exe = _install_app(tmp_path)
+    msgs = _setup(tmp_path, ensure, install_agent=True)
+    plist = (tmp_path / "agents" / f"{LABEL}.plist").read_text()
+    assert f"<string>{exe}</string>\n        <string>--categorize</string>" in plist
+    assert "/bin/solve-it-grid" not in plist
+    assert "__" not in plist
+    assert any("Solve It Grid.app" in m for m in msgs)
 
 
 def test_setup_no_agent_skips_launchctl(tmp_path, ensure):

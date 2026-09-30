@@ -43,6 +43,8 @@ To check the layout without screen-recording permission, render the popover and 
 
 Add `--status <file.json>` to render a saved status instead of the live one. The README screenshots are rendered from `Tests/SolveItGridCoreTests/Fixtures/status-thursday.json`, and the cover image from [`docs/assets/cover.html`](assets/cover.html).
 
+`--categorize` is the launchd agent's entry point: it runs one `solve-it-grid categorize` pass as a child process, with no UI, and exits with its status. `solve-it-grid setup` points the agent at it whenever the app is installed.
+
 ## Contributing
 
 This started as a tool for one person's setup, so some choices (two areas, the default goals, US holidays) reflect that, though most are configurable in `config.toml`. Issues and pull requests are welcome.
