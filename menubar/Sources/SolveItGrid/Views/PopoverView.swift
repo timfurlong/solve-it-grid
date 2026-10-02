@@ -18,6 +18,8 @@ struct PopoverView: View {
             } else if model.failure == nil {
                 Text("Loading…").foregroundStyle(.secondary)
             }
+            Divider()
+            footer(model.status)
         }
         .padding(14)
         .frame(width: 340)
@@ -56,13 +58,20 @@ struct PopoverView: View {
             Button { Task { await model.checkinDone() } } label: { Text("Done for today").frame(maxWidth: .infinity) }
         }
         .controlSize(.large)
+    }
 
-        Divider()
+    /// Always shown, so Quit stays reachable while loading or when status fails.
+    private func footer(_ status: Status?) -> some View {
         HStack(spacing: 14) {
-            Text(Copy.streakLine(status.streak.current))
-            Text(Copy.chipsEarnedLine(status.chips.totalEarned))
+            if let status {
+                Text(Copy.streakLine(status.streak.current))
+                Text(Copy.chipsEarnedLine(status.chips.totalEarned))
+            }
             Spacer()
-            Button("History", action: onHistory).buttonStyle(.link)
+            if status != nil {
+                Button("History", action: onHistory).buttonStyle(.link)
+            }
+            Button("Quit") { NSApp.terminate(nil) }.buttonStyle(.link)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
